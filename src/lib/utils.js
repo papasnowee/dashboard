@@ -1,5 +1,5 @@
-import ethers from 'ethers'
-import { formatUnits } from 'ethers/lib/utils'
+import ethers from 'ethers';
+import { formatUnits } from 'ethers/lib/utils';
 
 /**
  * Prettifies money
@@ -10,7 +10,7 @@ export function prettyMoney(microdollars) {
   return Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(microdollars / 1000000)
+  }).format(microdollars / 1000000);
 }
 
 /**
@@ -37,33 +37,32 @@ export function prettyPosition(sum) {
       pool,
       pricePerFullShare,
     },
-  } = sum
+  } = sum;
 
-  const formattedUnderlyingBalance = (function () {
+  const formattedUnderlyingBalance = (function format() {
     if (underlyingBalanceOf) {
       if (underlyingBalanceOf.balances) {
-        for (const balance in underlyingBalanceOf.balances) {
-          return formatUnits(underlyingBalanceOf.balances[balance], decimals)
-        }
+        const underlyingKey = Object.keys(underlyingBalanceOf.balances)[0];
+        return formatUnits(underlyingBalanceOf.balances[underlyingKey], decimals);
       }
     }
-    return 0
-  })()
+    return 0;
+  })();
 
   function formatProfits() {
     if (pricePerFullShare) {
-      const sharePrice = formatUnits(pricePerFullShare, decimals)
+      const sharePrice = formatUnits(pricePerFullShare, decimals);
       const underlyingPricedifference =
-        sharePrice * formattedUnderlyingBalance - formattedUnderlyingBalance
-      const usdValuePerShare = formatUnits(usdValueOf.toNumber(), 6) / formattedUnderlyingBalance
+        sharePrice * formattedUnderlyingBalance - formattedUnderlyingBalance;
+      const usdValuePerShare = formatUnits(usdValueOf.toNumber(), 6) / formattedUnderlyingBalance;
 
-      return underlyingPricedifference * usdValuePerShare
+      return underlyingPricedifference * usdValuePerShare;
     }
-    return 0
+    return 0;
   }
 
-  const truncatedClaimable = earnedRewards.div(10 ** 10)
-  const truncatedRewards = historicalRewards.div(10 ** 10)
+  const truncatedClaimable = earnedRewards.div(10 ** 10);
+  const truncatedRewards = historicalRewards.div(10 ** 10);
 
   return {
     name,
@@ -78,7 +77,7 @@ export function prettyPosition(sum) {
     underlyingBalance: formattedUnderlyingBalance,
     pool,
     profits: formatProfits(),
-  }
+  };
 }
 
 /**
@@ -87,10 +86,10 @@ export function prettyPosition(sum) {
  * @return {Object} pretty
  */
 export function prettyUnderlying(u) {
-  const underlyingBalancesList = u.underlyingBalances.toList()
+  const underlyingBalancesList = u.underlyingBalances.toList();
 
   if (underlyingBalancesList[0].balance.isZero()) {
-    return
+    return {};
   }
 
   /**
@@ -98,28 +97,28 @@ export function prettyUnderlying(u) {
    * @return {Object} transformed
    */
   function transformUnderlying(underlying) {
-    const { name, decimals } = underlying.asset
+    const { name, decimals } = underlying.asset;
     return {
       name,
       balance: ethers.utils.formatUnits(underlying.balance, decimals),
-    }
+    };
   }
 
   return {
     asset: u.name,
     underlyingBalances: underlyingBalancesList.map(transformUnderlying),
-  }
+  };
 }
 
 export const prettyEthAddress = address => {
   if (address && address.length === 42) {
-    address = `${address.substring(0, 6)}...${address.substring(42, 38)}`
+    address = `${address.substring(0, 6)}...${address.substring(42, 38)}`;
   }
-  return address
-}
+  return address;
+};
 
 export default {
   prettyUnderlying,
   prettyPosition,
   prettyMoney,
-}
+};
