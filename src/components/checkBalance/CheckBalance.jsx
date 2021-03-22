@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
-import styled, { ThemeProvider } from 'styled-components';
+import styled from 'styled-components';
 import { Row, Col } from 'styled-bootstrap-grid';
 import { motion } from 'framer-motion';
-import { darkTheme, lightTheme, fonts } from '../../styles/appStyles';
+import { fonts } from '../../styles/appStyles';
 import harvest from '../../lib/index';
 
 // COMPONENTS
@@ -15,20 +15,29 @@ import HarvestContext from '../../Context/HarvestContext';
 
 const { ethers } = harvest;
 
-const CheckBalance = props => {
+const CheckBalance = () => {
   const {
     state,
     setState,
-    setConnection,
     isCheckingBalance,
     setCheckingBalance,
     addressToCheck,
     setAddressToCheck,
     getPools,
   } = useContext(HarvestContext);
+
   const [validationMessage, setValidationMessage] = useState('');
 
-  const checkBalances = async address => {
+  const validateAddress = address => {
+    try {
+      ethers.utils.getAddress(address);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  };
+
+  const checkBalances = async () => {
     if (validateAddress(addressToCheck)) {
       setCheckingBalance(true);
       const provider = window.web3.currentProvider;
@@ -36,14 +45,13 @@ const CheckBalance = props => {
       const signer = ethersProvider.getSigner();
       const manager = harvest.manager.PoolManager.allPastPools(signer || provider);
       getPools();
-      setConnection(provider, signer, manager);
       manager
         .aggregateUnderlyings(addressToCheck)
         .then(underlying => {
           return underlying.toList().filter(u => !u.balance.isZero());
         })
         .then(underlyings => {
-          setState(state => ({ ...state, underlyings }));
+          setState(prevState => ({ ...prevState, underlyings }));
         })
         .catch(err => {
           console.log(err);
@@ -63,8 +71,8 @@ const CheckBalance = props => {
           summaries.forEach(pos => {
             total = total.add(pos.summary.usdValueOf);
           });
-          setState(state => ({
-            ...state,
+          setState(prevState => ({
+            ...prevState,
             summaries,
             usdValue: total,
           }));
@@ -81,11 +89,10 @@ const CheckBalance = props => {
     setAddressToCheck(e.target.value);
   };
 
-  const setCheck = address => {
-    if (address && validateAddress(address)) {
-      setState(state => ({ ...state, address: addressToCheck }));
+  const setCheck = () => {
+    if (addressToCheck && validateAddress(addressToCheck)) {
       setCheckingBalance(true);
-      checkBalances(address);
+      checkBalances(addressToCheck);
     } else {
       setAddressToCheck('');
       setValidationMessage('You must enter a valid address');
@@ -96,31 +103,20 @@ const CheckBalance = props => {
     }
   };
 
-  const validateAddress = address => {
-    try {
-      ethers.utils.getAddress(address);
-    } catch (e) {
-      return false;
-    }
-    return true;
-  };
-
   return (
-    <ThemeProvider theme={props.state.theme === 'dark' ? darkTheme : lightTheme}>
-      <>
-        {validationMessage ? (
-          <motion.div
-            key={validationMessage}
-            initial={{ x: 0, y: -100, opacity: 0 }}
-            animate={{ x: 0, y: 0, opacity: 1 }}
-            exit={{ x: 0, y: -100, opacity: 1 }}
-          >
-            <ValidationMessage className="validation-message">
-              <p>{validationMessage}</p>
-            </ValidationMessage>
-          </motion.div>
-        ) : null}
-      </>
+    <>
+      {validationMessage ? (
+        <motion.div
+          key={validationMessage}
+          initial={{ x: 0, y: -100, opacity: 0 }}
+          animate={{ x: 0, y: 0, opacity: 1 }}
+          exit={{ x: 0, y: -100, opacity: 1 }}
+        >
+          <ValidationMessage className="validation-message">
+            <p>{validationMessage}</p>
+          </ValidationMessage>
+        </motion.div>
+      ) : null}
 
       <Panel>
         {isCheckingBalance ? <Radio /> : ''}
@@ -151,7 +147,7 @@ const CheckBalance = props => {
         {isCheckingBalance ? (
           ''
         ) : (
-          <button onClick={() => setCheck(addressToCheck)} className="check-all button">
+          <button onClick={() => setCheck()} className="check-all button" type="button">
             Check Balance
           </button>
         )}
@@ -159,7 +155,7 @@ const CheckBalance = props => {
           <MainContent setAddressToCheck={setAddressToCheck} state={state} />
         ) : null}
       </Panel>
-    </ThemeProvider>
+    </>
   );
 };
 export default CheckBalance;

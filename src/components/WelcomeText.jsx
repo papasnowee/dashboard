@@ -71,7 +71,7 @@ const WelcomeTextPanel = styled.div`
 `;
 
 const WelcomeText = ({ disconnect, setAddress, setConnection, openModal }) => {
-  const { setIsConnecting, setCheckingBalance, web3Modal, isConnecting, getPools } = useContext(
+  const { setIsConnecting, setCheckingBalance, web3Modal, isConnecting } = useContext(
     HarvestContext,
   );
 
@@ -80,8 +80,6 @@ const WelcomeText = ({ disconnect, setAddress, setConnection, openModal }) => {
       const ethersProvider = new ethers.providers.Web3Provider(provider);
 
       const signer = ethersProvider.getSigner();
-
-      getPools();
 
       const manager = harvest.manager.PoolManager.allPastPools(signer || provider);
 
@@ -101,11 +99,11 @@ const WelcomeText = ({ disconnect, setAddress, setConnection, openModal }) => {
           openModal('Something has gone wrong, retrying...', 'error');
         });
     },
-    [disconnect, openModal, setAddress, setConnection, getPools],
+    [disconnect, openModal, setAddress, setConnection],
   );
 
   const connectMetamask = useCallback(() => {
-    setIsConnecting(true);
+    setIsConnecting(false);
     setCheckingBalance(false);
     web3Modal
       .connect()
