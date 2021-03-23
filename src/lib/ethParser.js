@@ -64,7 +64,7 @@ class EthParserApi {
       const url = `${this.url}/price/token/${s}`;
       const response = await axios.get(url);
 
-      const usd = parseInt(response.data.data, 10);
+      const usd = parseFloat(response.data.data);
 
       result[s.toLowerCase()] = this.memoize(s, usd, time + 5 * 60 * 1000);
 
