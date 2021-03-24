@@ -37,54 +37,6 @@ const CheckBalance = () => {
     return true;
   };
 
-  const checkBalances = async () => {
-    if (validateAddress(addressToCheck)) {
-      setCheckingBalance(true);
-      const provider = window.web3.currentProvider;
-      const ethersProvider = new ethers.providers.Web3Provider(provider);
-      const signer = ethersProvider.getSigner();
-      const manager = harvest.manager.PoolManager.allPastPools(signer || provider);
-      getPools();
-      manager
-        .aggregateUnderlyings(addressToCheck)
-        .then(underlying => {
-          return underlying.toList().filter(u => !u.balance.isZero());
-        })
-        .then(underlyings => {
-          setState(prevState => ({ ...prevState, underlyings }));
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      manager
-        .summary(addressToCheck)
-        .then(summaries =>
-          summaries.filter(
-            p =>
-              !p.summary.earnedRewards.isZero() ||
-              !p.summary.stakedBalance.isZero() ||
-              (p.summary.isActive && !p.summary.unstakedBalance.isZero()),
-          ),
-        )
-        .then(summaries => {
-          let total = ethers.BigNumber.from(0);
-          summaries.forEach(pos => {
-            total = total.add(pos.summary.usdValueOf);
-          });
-          setState(prevState => ({
-            ...prevState,
-            summaries,
-            usdValue: total,
-          }));
-
-          return summaries;
-        })
-        .catch(err => {
-          console.log(err);
-        });
-    }
-  };
-
   const changeHandler = e => {
     setAddressToCheck(e.target.value);
   };
@@ -92,9 +44,11 @@ const CheckBalance = () => {
   const setCheck = () => {
     if (addressToCheck && validateAddress(addressToCheck)) {
       setCheckingBalance(true);
-      checkBalances(addressToCheck);
+      getPools();
+      setState(prevState => ({ ...prevState, addressToCheck }));
     } else {
       setAddressToCheck('');
+      setState(prevState => ({ ...prevState, addressToCheck: '' }));
       setValidationMessage('You must enter a valid address');
       const timer = setTimeout(() => {
         setValidationMessage('');
