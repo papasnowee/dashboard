@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider } from 'styled-components';
 import { Row, Col } from 'styled-bootstrap-grid';
 import Loadable from 'react-loadable';
 import axios from 'axios';
 import Web3Modal from 'web3modal';
 import WalletConnectProvider from '@walletconnect/web3-provider';
+import ModeSelectBoard from './components/ModeSelectBoard';
 import HarvestContext from './Context/HarvestContext';
 import harvest from './lib';
 import { darkTheme, lightTheme } from './styles/appStyles';
@@ -18,7 +19,6 @@ import { Topbar, GlobalStyle, Brand, Panel, Container } from './styles/AppJsStyl
 import TabContainer from './components/tabContainer/TabContainer';
 import SettingsModal from './components/userSettings/SettingsModal';
 import Radio from './components/radio/Radio';
-import MainContent from './components/MainContent';
 import WelcomeText from './components/WelcomeText';
 import CheckBalance from './components/checkBalance/CheckBalance';
 import TokenMessage from './components/statusMessages/TokenMessage';
@@ -71,6 +71,7 @@ function App() {
     signer: undefined,
     manager: undefined,
     address: '',
+    addressToCheck: '',
     summaries: [],
     underlyings: [],
     usdValue: 0,
@@ -103,10 +104,22 @@ function App() {
       });
   };
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     setRefreshing(true);
+
+    let address = '';
+
+    if (isCheckingBalance) {
+      address = state.addressToCheck;
+    } else if (isConnecting) {
+      address = state.address;
+    } else {
+      setRefreshing(false);
+      return;
+    }
+
     state.manager
-      .aggregateUnderlyings(state.address)
+      .aggregateUnderlyings(address)
       .then(underlying => {
         return underlying.toList().filter(u => !u.balance.isZero());
       })
@@ -118,7 +131,7 @@ function App() {
       });
 
     state.manager
-      .summary(state.address)
+      .summary(address)
       .then(summaries =>
         summaries.filter(
           p =>
@@ -149,7 +162,7 @@ function App() {
       .catch(() => {
         refresh();
       });
-  };
+  }, [isCheckingBalance, isConnecting, state.address, state.addressToCheck, state.manager]);
 
   const memoizeExchangeRates = () => {
     axios
@@ -170,6 +183,12 @@ function App() {
     }, 60000);
     return () => clearTimeout(timer);
   });
+
+  useEffect(() => {
+    if (isConnecting) {
+      refresh();
+    }
+  }, [isConnecting, refresh]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -277,6 +296,19 @@ function App() {
     return num ? currencyFormatter.format(num) : '$0.00';
   };
 
+  const setCheckingBalanceStatus = checking => {
+    setState(prevState => ({
+      ...prevState,
+      summaries: [],
+      underlyings: [],
+      usdValue: 0,
+      apy: 0,
+      farmPrice: 0,
+      totalFarmEarned: 0,
+    }));
+    setCheckingBalance(checking);
+  };
+
   return (
     <HarvestContext.Provider
       value={{
@@ -291,7 +323,7 @@ function App() {
         isConnecting,
         setIsConnecting,
         isCheckingBalance,
-        setCheckingBalance,
+        setCheckingBalance: setCheckingBalanceStatus,
         setConnection,
         disconnect,
         refresh,
@@ -360,10 +392,8 @@ function App() {
                       <TokenMessage />
                       <HarvestAndStakeMessage />
 
-                      {/* MOVED MAIN COMPONENTS INTO ITS OWN COMPONENT */}
-                      {/* The welcome text display on intial load and when a wallet is connected the main content renders */}
                       {state.provider ? (
-                        <MainContent state={state} setState={setState} openModal={openModal} />
+                        <ModeSelectBoard state={state} setState={setState} openModal={openModal} />
                       ) : (
                         <Row>
                           <Col>
@@ -384,9 +414,7 @@ function App() {
               </>
             </Col>
           </Row>
-          {isConnecting ? (
-            ''
-          ) : (
+          {state.provider && !isConnecting && (
             <Row>
               <Col style={{ marginTop: '3rem', marginBottom: '3rem' }}>
                 {isCheckingBalance ? <TabContainer /> : ''}
