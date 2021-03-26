@@ -87,7 +87,9 @@ function App() {
 
   const getPersonalGasSaved = async () => {
     await axios
-      .get(process.env.REACT_APP_PERSONAL_GAS_SAVED)
+      .get(
+        `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${state.address}`,
+      )
       .then(res => {
         setPersonalGasSaved(Math.round(res.data.data));
       })
