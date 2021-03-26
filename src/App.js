@@ -173,8 +173,8 @@ function App() {
         }));
         setRefreshing(false);
       })
-      .catch(() => {
-        refresh();
+      .catch(err => {
+        console.log(err);
       });
   }, [isCheckingBalance, isConnecting, state.address, state.addressToCheck, state.manager]);
 
