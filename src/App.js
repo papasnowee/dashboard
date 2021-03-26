@@ -145,7 +145,7 @@ function App() {
         summaries.forEach(pos => {
           total = total.add(pos.summary.usdValueOf);
         });
-        return Promise.all([state.manager.iFarmSummary(state.address), total, summaries]);
+        return Promise.all([state.manager.iFarmSummary(address), total, summaries]);
       })
       .then(([iFarmSummary, total, summaries]) => {
         if (iFarmSummary) {
@@ -215,6 +215,14 @@ function App() {
     }
     // eslint-disable-next-line
   }, [state.address]);
+
+  useEffect(() => {
+    if (state.addressToCheck !== '') {
+      refresh();
+    }
+    // eslint-disable-next-line
+  }, [state.addressToCheck]);
+
   useEffect(() => {
     if (state.usdValue) {
       setState(prevState => ({ ...prevState, display: true }));
