@@ -1,19 +1,38 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
-//components
-import APY from './apy/APY';
-import Balance from './balance/Balance';
-import FarmPrice from './farmPrice/FarmPrice';
-import TotalFarmEarned from './totalFarmEarned/TotalFarmEarned';
+import HarvestContext from '../../Context/HarvestContext';
+import Balance from './components/balance/Balance';
+import Container from './FarmInfoStyles';
+import BluePanel from './components/bluePanel/BluePanel';
+import LoadingBluePanel from './components/loadingBluePanel/LoadingBluePanelStyles';
+
 const FarmInfo = () => {
-    return (
-        <div className='farm-info'>
-            <Balance />
-            <APY />
-            <FarmPrice />
-            <TotalFarmEarned />
-        </div>
+    const { state, convertStandardNumber, currentExchangeRate, personalGasSaved } = useContext(
+        HarvestContext,
     );
-}
+    const farmPriceValue = convertStandardNumber(state.farmPrice * currentExchangeRate);
+
+    const cellsData = [
+        { value: state.apy, text: 'Profit Share APY' },
+        { value: farmPriceValue, text: 'FARM price' },
+        { value: personalGasSaved, text: 'Personal Saved Gas' },
+        { value: state.totalFarmEarned?.toFixed(6), text: 'Farm Earned' },
+    ];
+
+    const Cells = cellsData.map(item => {
+        return state.display ? (
+            <BluePanel key={item.text} value={item.value} text={item.text} />
+        ) : (
+            <LoadingBluePanel key={item.text} />
+        );
+    });
+
+    return (
+        <Container>
+            <Balance />
+            {Cells}
+        </Container>
+    );
+};
 
 export default FarmInfo;

@@ -1,8 +1,6 @@
-import React from "react";
-import styled, { ThemeProvider } from "styled-components";
-import { darkTheme, lightTheme } from "../../../styles/appStyles";
+import styled from "styled-components";
 
-const SkeletonPanel = styled.div`
+const LoadingBluePanel = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -13,13 +11,6 @@ const SkeletonPanel = styled.div`
   box-shadow: ${(props) => props.theme.style.panelBoxShadow};
   border-radius: 0.5rem;
   overflow: hidden;
-
-  .skeleton-header {
-    margin: 0;
-    height: 6rem;
-    width: 100%;
-    border-bottom: 2px solid black;
-  }
 
   &::before {
     content: "";
@@ -48,16 +39,8 @@ const SkeletonPanel = styled.div`
 
   @media (max-width: 1107px) {
     height: 10rem;
-    margin-top: 1rem;
+    
   }
 `;
 
-const PriceSkeleton = ({ theme }) => {
-  return (
-    <ThemeProvider theme={theme === "dark" ? darkTheme : lightTheme}>
-      <SkeletonPanel></SkeletonPanel>
-    </ThemeProvider>
-  );
-};
-
-export default PriceSkeleton;
+export default LoadingBluePanel;
