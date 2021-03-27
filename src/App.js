@@ -186,7 +186,6 @@ function App() {
           `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${state.address}`,
         )
         .then(res => {
-          console.log(1111, res);
           setPersonalGasSaved(Math.round(res.data.data));
         })
         .catch(err => {
