@@ -91,7 +91,6 @@ const CheckBalance = () => {
 
   const setCheck = () => {
     if (addressToCheck && validateAddress(addressToCheck)) {
-      setCheckingBalance(true);
       checkBalances(addressToCheck);
     } else {
       setAddressToCheck('');
@@ -151,9 +150,7 @@ const CheckBalance = () => {
             Check Balance
           </button>
         )}
-        {isCheckingBalance ? (
-          <MainContent setAddressToCheck={setAddressToCheck} state={state} />
-        ) : null}
+        {isCheckingBalance ? <MainContent /> : null}
       </Panel>
     </>
   );

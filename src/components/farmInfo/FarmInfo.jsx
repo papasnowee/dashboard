@@ -6,16 +6,14 @@ import Container from './FarmInfoStyles';
 import BluePanel from './components/bluePanel/BluePanel';
 import LoadingBluePanel from './components/loadingBluePanel/LoadingBluePanelStyles';
 
-const FarmInfo = () => {
-    const { state, convertStandardNumber, currentExchangeRate, personalGasSaved } = useContext(
-        HarvestContext,
-    );
+const FarmInfo = ({ savedGas }) => {
+    const { state, convertStandardNumber, currentExchangeRate } = useContext(HarvestContext);
     const farmPriceValue = convertStandardNumber(state.farmPrice * currentExchangeRate);
 
     const cellsData = [
         { value: state.apy, text: 'Profit Share APY' },
         { value: farmPriceValue, text: 'FARM price' },
-        { value: personalGasSaved, text: 'Personal Saved Gas' },
+        { value: savedGas, text: 'Personal Saved Gas' },
         { value: state.totalFarmEarned?.toFixed(6), text: 'Farm Earned' },
     ];
 

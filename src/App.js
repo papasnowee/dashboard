@@ -49,6 +49,8 @@ const ErrorModal = Loadable({
 
 function App() {
   const [personalGasSaved, setPersonalGasSaved] = useState(0);
+  // for read-only-mode
+  const [personalGasSavedToCheck, setPersonalGasSavedToCheck] = useState(0);
   // for currency conversion
   const [baseCurrency, setBaseCurrency] = useState(
     window.localStorage.getItem('HarvestFinance:currency') || 'USD',
@@ -84,19 +86,6 @@ function App() {
     farmPrice: 0,
     totalFarmEarned: 0,
   });
-
-  const getPersonalGasSaved = async () => {
-    await axios
-      .get(
-        `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${state.address}`,
-      )
-      .then(res => {
-        setPersonalGasSaved(Math.round(res.data.data));
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  };
 
   const getPools = async () => {
     await axios
@@ -189,9 +178,43 @@ function App() {
       });
   };
 
+  // using state.address
   useEffect(() => {
+    const getPersonalGasSaved = async () => {
+      await axios
+        .get(
+          `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${state.address}`,
+        )
+        .then(res => {
+          console.log(1111, res);
+          setPersonalGasSaved(Math.round(res.data.data));
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    };
     getPersonalGasSaved();
-  });
+  }, [state.address]);
+
+  // using addressToCheck
+  useEffect(() => {
+    if (addressToCheck === '') {
+      return;
+    }
+    const getPersonalGasSaved = async () => {
+      await axios
+        .get(
+          `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${addressToCheck}`,
+        )
+        .then(res => {
+          setPersonalGasSavedToCheck(Math.round(res.data.data));
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    };
+    getPersonalGasSaved();
+  }, [addressToCheck]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -333,7 +356,7 @@ function App() {
         state,
         setState,
         personalGasSaved,
-        setPersonalGasSaved,
+        personalGasSavedToCheck,
         radio,
         setRadio,
         toggleRadio,

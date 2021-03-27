@@ -122,7 +122,7 @@ const Wallet = ({ theme, address, provider }) => {
 
   const currentAddress = isCheckingBalance ? addressToCheck : address;
 
-  const renderConnectStatus = (provider, address) => {
+  const renderConnectStatus = () => {
     return (
       <span className="connect-status-container">
         <span id="address">
