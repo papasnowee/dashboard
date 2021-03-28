@@ -57,7 +57,7 @@
         "let": "always"
       }
     ],
-    "prettier/prettier": ["error"],
+    "prettier/prettier": ["error" , {"endOfLine":"auto"}],
     "react/display-name": 0,
     "import/no-cycle": 0
   }
