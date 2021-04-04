@@ -75,11 +75,8 @@ export class PoolManager {
       const prop = propName || functionPath[functionPath.length - 1];
       // traverse props iteratively
       let func = pool;
-      /* eslint-disable-next-line guard-for-in */
       functionPath.forEach(elem => {
         func = func[elem];
-        if (!func) return null;
-        return func;
       });
 
       if (func) {

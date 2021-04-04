@@ -12,7 +12,13 @@
     "plugin:react/recommended",
     "plugin:prettier/recommended",
     "prettier/react",
-    "plugin:react-hooks/recommended"
+    "plugin:react-hooks/recommended",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier/@typescript-eslint",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript"
   ],
   "parser": "babel-eslint",
   "parserOptions": {
@@ -25,10 +31,11 @@
     }
   },
   "rules": {
+    "@typescript-eslint/no-explicit-any": 2,
     "react/jsx-filename-extension": [
       1,
       {
-        "extensions": [".js", ".jsx"]
+        "extensions": [".js", ".jsx", ".tsx", ".ts"]
       }
     ],
     "no-console": "off",

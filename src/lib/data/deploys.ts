@@ -1,4 +1,19 @@
-const assets = [
+interface ICurveInfo {
+  poolAddress: string;
+  // eslint-disable-next-line no-use-before-define
+  assets: (IAsset | undefined)[];
+}
+
+interface IAsset {
+  name: string;
+  decimals: number;
+  address: string;
+  type?: string;
+  curveInfo?: ICurveInfo;
+  underlyingAsset?: IAsset;
+}
+
+const assets: IAsset[] = [
   {
     name: '11NCH',
     decimals: 18,
@@ -622,7 +637,7 @@ const assets = [
  * @param {String} name the name of the asset to find
  * @return {Object} the asset object
  */
-function assetByName(name) {
+function assetByName(name: string) {
   return assets.find(asset => asset.name === name);
 }
 
@@ -630,7 +645,7 @@ function assetByName(name) {
  * @param {String} address the address of the asset to find
  * @return {Object} the asset object
  */
-function assetByAddress(address) {
+function assetByAddress(address: string) {
   return assets.find(asset => asset.address.toLowerCase() === address.toLowerCase());
 }
 
@@ -3552,13 +3567,13 @@ const periods = [
  * @param {Set} setB
  * @return {Set} union
  */
-function union(setA, setB) {
-  const has = [];
-  setA.forEach(val => has.push(val.address));
+function union(setA: any, setB: any) {
+  const has: any[] = [];
+  setA.forEach((val: { address: any; }) => has.push(val.address));
 
   const unionSet = new Set(setA);
 
-  setB.forEach(elem => {
+  setB.forEach((elem: any) => {
     if (!has.find(e => e === elem.address)) unionSet.add(elem);
   });
 
@@ -3570,14 +3585,14 @@ function union(setA, setB) {
  * @param {Set} setB
  * @return {Set} difference
  */
-function difference(setA, setB) {
-  const has = [];
-  setB.forEach(val => has.push(val.address));
+function difference(setA: any, setB: any) {
+  const has: any = [];
+  setB.forEach((val: any) => has.push(val.address));
 
   const differenceSet = new Set(setA);
 
-  setA.forEach(element => {
-    if (has.find(e => e === element.address)) differenceSet.delete(element);
+  setA.forEach((element: any) => {
+    if (has.find((e: any) => e === element.address)) differenceSet.delete(element);
   });
   return differenceSet;
 }
@@ -3611,7 +3626,7 @@ function isAddressActive(address) {
  * @return {Object} the asset object
  */
 function poolByName(name) {
-  return [...allPastPools].find(pool => pool.name === name);
+  return [...allPastPools].find((pool: any) => pool.name === name);
 }
 
 /**
@@ -3619,7 +3634,7 @@ function poolByName(name) {
  * @return {Object} the pool object
  */
 function poolByAddress(address) {
-  return [...allPastPools].find(pool => pool.address.toLowerCase() === address.toLowerCase());
+  return [...allPastPools].find((pool: any) => pool.address.toLowerCase() === address.toLowerCase());
 }
 
 /**
@@ -3649,14 +3664,14 @@ const testPools = [
 ];
 
 export default {
-  activePools: Object.freeze([...activePools]),
-  allPastPools: Object.freeze([...allPastPools]),
+  activePools: Object.freeze([...(activePools as any)]),
+  allPastPools: Object.freeze([...(allPastPools as any)]),
   assets,
   assetByAddress,
   assetByName,
   // brittle
   farmRewardsPool: poolByAddress('0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50'),
-  inactivePools: Object.freeze([...inactivePools]),
+  inactivePools: Object.freeze([...(inactivePools as any)]),
   isAddressActive,
   isActive,
   periods,

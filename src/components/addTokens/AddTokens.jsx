@@ -23,8 +23,8 @@ const Panel = styled.div`
     overflow-x: scroll;
     height: 16rem;
     scrollbar-color: ${({ theme }) => {
-      return `${theme.style.scrollBarColor} ${theme.style.lightBackground}`;
-    }};
+    return `${theme.style.scrollBarColor} ${theme.style.lightBackground}`;
+  }};
     scrollbar-width: thin;
 
     ::-webkit-scrollbar {

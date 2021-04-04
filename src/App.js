@@ -24,6 +24,7 @@ import CheckBalance from './components/checkBalance/CheckBalance';
 import TokenMessage from './components/statusMessages/TokenMessage';
 import HarvestAndStakeMessage from './components/statusMessages/HarvestAndStakeMessage';
 import Sidedrawer from './components/userSettings/sidedrawer/Sidedrawer';
+import { getBalanceFromVault } from './lib2/utils/StackedBalance';
 
 const { ethers } = harvest;
 
