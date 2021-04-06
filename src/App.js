@@ -102,7 +102,10 @@ function App() {
     await axios
       .get(`https://api-ui.harvest.finance/pools?key=${process.env.REACT_APP_HARVEST_KEY}`)
       .then(res => {
-        const currentAPY = res.data[0].rewardAPY;
+        let currentAPY = 0;
+        if (res && res.data && res.data.eth && res.data.eth[0] && res.data.eth[0].rewardAPY) {
+          currentAPY = res.data.eth[0].rewardAPY;
+        }
         setState(prevState => ({ ...prevState, apy: currentAPY }));
       })
       .catch(err => {
@@ -159,7 +162,7 @@ function App() {
         summaries.forEach(pos => {
           total = total.add(pos.summary.usdValueOf);
         });
-        return Promise.all([state.manager.iFarmSummary(state.address), total, summaries]);
+        return Promise.all([state.manager.iFarmSummary(address), total, summaries]);
       })
       .then(([iFarmSummary, total, summaries]) => {
         if (iFarmSummary) {
@@ -173,8 +176,8 @@ function App() {
         }));
         setRefreshing(false);
       })
-      .catch(() => {
-        refresh();
+      .catch(err => {
+        console.log(err);
       });
   }, [isCheckingBalance, isConnecting, state.address, state.addressToCheck, state.manager]);
 
@@ -198,7 +201,7 @@ function App() {
       if (state.manager) {
         refresh();
       }
-    }, 60000);
+    }, 20000);
     return () => clearTimeout(timer);
   });
 
@@ -211,7 +214,7 @@ function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       getPools();
-    }, 60000);
+    }, 20000);
     return () => clearTimeout(timer);
   });
 
@@ -233,6 +236,14 @@ function App() {
     }
     // eslint-disable-next-line
   }, [state.address]);
+
+  useEffect(() => {
+    if (state.addressToCheck !== '') {
+      refresh();
+    }
+    // eslint-disable-next-line
+  }, [state.addressToCheck]);
+
   useEffect(() => {
     if (state.usdValue) {
       setState(prevState => ({ ...prevState, display: true }));
