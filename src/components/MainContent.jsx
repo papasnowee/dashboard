@@ -4,26 +4,17 @@ import styled from 'styled-components';
 import { fonts } from '../styles/appStyles';
 import Harvest from './harvest/Harvest';
 import AddTokens from './addTokens/AddTokens';
-import Wallet from './Wallet';
+import FarmCardContainer from './farmCards/FarmCardGroupContainer';
 import FarmingTable from './farmingTable/FarmingTable';
 import FarmInfo from './farmInfo/FarmInfo';
 import AssetTable from './assetTable/AssetTable';
 import HarvestContext from '../Context/HarvestContext';
-
+import Wallet from './Wallet';
 const MainContent = ({ setState, openModal }) => {
   const { isCheckingBalance, state } = useContext(HarvestContext);
 
   return (
     <Main>
-      {isCheckingBalance ? (
-        ''
-      ) : (
-        <Row>
-          <Col>
-            <Wallet theme={state.theme} address={state.address} provider={state.provider} />
-          </Col>
-        </Row>
-      )}
       <Row>
         <Col>
           <FarmInfo />
