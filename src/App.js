@@ -178,41 +178,27 @@ function App() {
       });
   };
 
-  // using state.address
-  useEffect(() => {
-    const getPersonalGasSaved = async () => {
-      await axios
+  const getPersonalGasSaved = async (address, setGasInfo) => {
+    address &&
+      (await axios
         .get(
-          `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${state.address}`,
+          `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${address}`,
         )
         .then(res => {
-          setPersonalGasSaved(Math.round(res.data.data));
+          setGasInfo(Math.round(res.data.data));
         })
         .catch(err => {
           console.log(err);
-        });
-    };
-    getPersonalGasSaved();
+        }));
+  };
+  // using state.address
+  useEffect(() => {
+    getPersonalGasSaved(state.address, setPersonalGasSaved);
   }, [state.address]);
 
   // using addressToCheck
   useEffect(() => {
-    if (addressToCheck === '') {
-      return;
-    }
-    const getPersonalGasSaved = async () => {
-      await axios
-        .get(
-          `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${addressToCheck}`,
-        )
-        .then(res => {
-          setPersonalGasSavedToCheck(Math.round(res.data.data));
-        })
-        .catch(err => {
-          console.log(err);
-        });
-    };
-    getPersonalGasSaved();
+    getPersonalGasSaved(addressToCheck, setPersonalGasSavedToCheck);
   }, [addressToCheck]);
 
   useEffect(() => {
