@@ -57,26 +57,26 @@ const FarmingTable = () => {
           index === 2
             ? a.earnedRewards
             : index === 3
-            ? a.stakedBalance
-            : index === 4
-            ? a.percentOfPool.substr(0, a.percentOfPool.length - 1)
-            : index === 5
-            ? a.usdValueOf
-            : index === 6
-            ? a.unstakedBalance
-            : 0;
+              ? a.stakedBalance
+              : index === 4
+                ? a.percentOfPool.substr(0, a.percentOfPool.length - 1)
+                : index === 5
+                  ? a.usdValueOf
+                  : index === 6
+                    ? a.unstakedBalance
+                    : 0;
         const second =
           index === 2
             ? b.earnedRewards
             : index === 3
-            ? b.stakedBalance
-            : index === 4
-            ? b.percentOfPool.substr(0, b.percentOfPool.length - 1)
-            : index === 5
-            ? b.usdValueOf
-            : index === 6
-            ? b.unstakedBalance
-            : 0;
+              ? b.stakedBalance
+              : index === 4
+                ? b.percentOfPool.substr(0, b.percentOfPool.length - 1)
+                : index === 5
+                  ? b.usdValueOf
+                  : index === 6
+                    ? b.unstakedBalance
+                    : 0;
         return parseFloat(first) >= parseFloat(second) ? sortDirection : -sortDirection;
       });
     } else if (index === 1) {
@@ -107,6 +107,7 @@ const FarmingTable = () => {
       getTotalFarmEarned();
     }
     const array = state.summaries.map(utils.prettyPosition);
+    debugger
     setSortedSummary(array);
   }, [getTotalFarmEarned, state.summaries, state.totalFarmEarned]);
 
