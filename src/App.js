@@ -49,6 +49,8 @@ const ErrorModal = Loadable({
 
 function App() {
   const [personalGasSaved, setPersonalGasSaved] = useState(0);
+  // for read-only-mode
+  const [personalGasSavedToCheck, setPersonalGasSavedToCheck] = useState(0);
   // for currency conversion
   const [baseCurrency, setBaseCurrency] = useState(
     window.localStorage.getItem('HarvestFinance:currency') || 'USD',
@@ -84,19 +86,6 @@ function App() {
     farmPrice: 0,
     totalFarmEarned: 0,
   });
-
-  const getPersonalGasSaved = async () => {
-    await axios
-      .get(
-        `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${state.address}`,
-      )
-      .then(res => {
-        setPersonalGasSaved(Math.round(res.data.data));
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  };
 
   const getPools = async () => {
     await axios
@@ -192,9 +181,28 @@ function App() {
       });
   };
 
+  const getPersonalGasSaved = async (address, setGasInfo) => {
+    address &&
+      (await axios
+        .get(
+          `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${address}`,
+        )
+        .then(res => {
+          setGasInfo(Math.round(res.data.data));
+        })
+        .catch(err => {
+          console.log(err);
+        }));
+  };
+  // using state.address
   useEffect(() => {
-    getPersonalGasSaved();
-  });
+    getPersonalGasSaved(state.address, setPersonalGasSaved);
+  }, [state.address]);
+
+  // using addressToCheck
+  useEffect(() => {
+    getPersonalGasSaved(addressToCheck, setPersonalGasSavedToCheck);
+  }, [addressToCheck]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -344,7 +352,7 @@ function App() {
         state,
         setState,
         personalGasSaved,
-        setPersonalGasSaved,
+        personalGasSavedToCheck,
         radio,
         setRadio,
         toggleRadio,

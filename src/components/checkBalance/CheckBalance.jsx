@@ -105,9 +105,7 @@ const CheckBalance = () => {
             Check Balance
           </button>
         )}
-        {isCheckingBalance ? (
-          <MainContent setAddressToCheck={setAddressToCheck} state={state} />
-        ) : null}
+        {isCheckingBalance ? <MainContent /> : null}
       </Panel>
     </>
   );

@@ -11,7 +11,11 @@ import AssetTable from './assetTable/AssetTable';
 import HarvestContext from '../Context/HarvestContext';
 
 const MainContent = ({ setState, openModal }) => {
-  const { isCheckingBalance, state } = useContext(HarvestContext);
+  const { isCheckingBalance, state, personalGasSaved, personalGasSavedToCheck } = useContext(
+    HarvestContext,
+  );
+
+  const savedGas = isCheckingBalance ? personalGasSavedToCheck : personalGasSaved;
 
   return (
     <Main>
@@ -24,9 +28,10 @@ const MainContent = ({ setState, openModal }) => {
           </Col>
         </Row>
       )}
+
       <Row>
         <Col>
-          <FarmInfo />
+          <FarmInfo savedGas={savedGas} />
         </Col>
       </Row>
 

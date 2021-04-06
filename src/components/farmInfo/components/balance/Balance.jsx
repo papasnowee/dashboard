@@ -14,7 +14,7 @@ const Balance = () => {
     const balance = () => {
       let ub = ethers.BigNumber.from(0);
 
-      for (let i = 0; i < state.summaries.length; i += 1) {
+      for (let i = 0; i < state.summaries.length; i++) {
         ub = ub.add(state.summaries[i].summary.usdValueOf);
 
         setUserBalance(ub);
