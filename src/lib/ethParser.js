@@ -99,8 +99,8 @@ const EthParser = (function ethParser() {
     return object;
   }
 
-  function fromUrl(url) {
-    url = url || process.env.REACT_APP_ETH_PARSER_URL;
+  function fromUrl() {
+    const url = process.env.REACT_APP_ETH_PARSER_URL;
     if (!instances[url]) {
       instances[url] = createInstance(url);
     }

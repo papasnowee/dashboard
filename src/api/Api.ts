@@ -15,4 +15,10 @@ export default class API {
             .get(`${process.env.REACT_APP_ETH_PARSER_URL}/contracts/vaults`);
         return response ? response.data.data : [];
     }
+
+    public static async getTokenPrice(tokenAddress): Promise<string> {
+        const response = await axios
+            .get(`${process.env.REACT_APP_ETH_PARSER_URL}/price/token/${tokenAddress}`);
+        return response ? response.data.data : 0;
+    }
 }

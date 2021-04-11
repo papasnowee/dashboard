@@ -2,7 +2,7 @@ import data from './data/deploys';
 import AutoCompoundingRewardsPool from './AutoCompoundingRewardsPool';
 import HarvestRewardsPool from './HarvestRewardsPool';
 
-export const getRewardsPool = (pool, provider) => {
+export const createRewardsPool = (pool, provider) => {
   switch (pool.type) {
     case 'autocompounding':
       return new AutoCompoundingRewardsPool(pool, provider);
@@ -12,7 +12,7 @@ export const getRewardsPool = (pool, provider) => {
 };
 
 export function knownPools(provider) {
-  return data.pools.map(pool => getRewardsPool(pool, provider));
+  return data.pools.map(pool => createRewardsPool(pool, provider));
 }
 
 /**
@@ -20,11 +20,11 @@ export function knownPools(provider) {
  * @return {PoolManager} manager
  */
 export function weekOne(provider) {
-  return data.weekOnePools.map(pool => getRewardsPool(pool, provider));
+  return data.weekOnePools.map(pool => createRewardsPool(pool, provider));
 }
 
 export function test(provider) {
-  return data.testPools.map(pool => getRewardsPool(pool, provider));
+  return data.testPools.map(pool => createRewardsPool(pool, provider));
 }
 
 /**
@@ -32,7 +32,7 @@ export function test(provider) {
  * @return {PoolManager} manager
  */
 export function weekTwo(provider) {
-  return data.weekTwoPools.map(pool => getRewardsPool(pool, provider));
+  return data.weekTwoPools.map(pool => createRewardsPool(pool, provider));
 }
 
 /**
@@ -40,7 +40,7 @@ export function weekTwo(provider) {
  * @return {PoolManager} manager
  */
 export function activePools(provider) {
-  return data.activePools.map(pool => getRewardsPool(pool, provider));
+  return data.activePools.map(pool => createRewardsPool(pool, provider));
 }
 
 /**
@@ -48,7 +48,7 @@ export function activePools(provider) {
  * @return {PoolManager} manager
  */
 export function inactivePools(provider) {
-  return data.inactivePools.map(pool => getRewardsPool(pool, provider));
+  return data.inactivePools.map(pool => createRewardsPool(pool, provider));
 }
 
 /**
@@ -56,5 +56,5 @@ export function inactivePools(provider) {
  * @return {PoolManager} manager
  */
 export function allPastPools(provider) {
-  return data.allPastPools.map(pool => getRewardsPool(pool, provider));
+  return data.allPastPools.map(pool => createRewardsPool(pool, provider));
 }

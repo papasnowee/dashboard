@@ -3606,8 +3606,6 @@ sets.forEach(set => {
   allPastPools = union(allPastPools, set);
 });
 
-debugger
-
 // Inactive pools are in all past pools, but not the most recent week
 const inactivePools = difference(allPastPools, sets[sets.length - 1]);
 const activePools = sets[sets.length - 1];

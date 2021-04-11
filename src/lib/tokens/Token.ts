@@ -11,6 +11,8 @@ export default class Token extends ERC20Extended {
    * @param {Object} abi abi
    * @param {Object} provider web3 provider
    */
+  type: string;
+
   constructor(asset, abi, provider) {
     super(asset.address, asset.decimals, abi, provider);
     this.type = asset.type;

@@ -52,11 +52,11 @@ export default class RewardsPool extends ethers.Contract {
       this.stakedBalance(address),
       this.earnedRewards(address),
     ]);
-
     const [stakedValue, rewardValue] = await Promise.all([
       this.lptoken.usdValueOf(stakedBalance),
       this.reward.usdValueOf(rewardBalance),
     ]);
+
     return stakedValue.add(rewardValue);
   }
 
@@ -71,7 +71,6 @@ export default class RewardsPool extends ethers.Contract {
     if (total.isZero()) return '0%';
 
     const amnt = tokens.mul(ethers.constants.WeiPerEther).div(total);
-
     return `${ethers.utils.formatUnits(amnt, 16).slice(0, 5)}%`;
   }
 

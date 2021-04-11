@@ -18,10 +18,10 @@ export default class HarvestRewardsPool extends RewardsPool {
   async historicalRewards(address) {
     const REWARD_PAID_TOPIC0 = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486';
     const filter = this.filters.RewardPaid(address);
-
+    
     const currentRewards = await this.earnedRewards(address);
-    let rewardPaidEvents = await this.queryFilter(filter),
-      pastRewards = ethers.BigNumber.from(0);
+    let rewardPaidEvents = await this.queryFilter(filter);
+    let pastRewards = ethers.BigNumber.from(0);
 
     rewardPaidEvents = rewardPaidEvents.filter(e => e.topics[0] === REWARD_PAID_TOPIC0);
     pastRewards = rewardPaidEvents.reduce(

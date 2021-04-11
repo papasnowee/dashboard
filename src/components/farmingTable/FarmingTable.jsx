@@ -1,7 +1,9 @@
 import React, { useEffect, useContext, useState, useCallback } from 'react';
-import styled, { ThemeProvider } from 'styled-components';
+import styled from 'styled-components';
+import { ethers, Contract } from 'ethers';
+
 import harvest from '../../lib/index';
-import { darkTheme, lightTheme, fonts } from '../../styles/appStyles';
+import { fonts } from '../../styles/appStyles';
 import {
   TableContainer,
   MainTableInner,
@@ -12,8 +14,11 @@ import {
   Tabs,
 } from './FarmingTableStyles';
 import HarvestContext from '../../Context/HarvestContext';
-
 import FarmTableSkeleton from './FarmTableSkeleton';
+import API from '../../api';
+import { FTOKEN_ABI, REWARDS_ABI, iFARM_ABI } from '../../lib/data/ABIs';
+import { makeBalancePrettier } from './utils';
+import { vaultsWithoutReward, rewardDecimals } from './constants';
 
 const { utils } = harvest;
 
@@ -42,7 +47,15 @@ const columns = [
 ];
 
 const FarmingTable = () => {
-  const { state, setState, prettyBalance, currentExchangeRate } = useContext(HarvestContext);
+
+  const [pools, setPools] = useState([]);
+  const [vaults, setVaults] = useState([]);
+  const [assets, setAssets] = useState([]);
+
+
+
+
+  const { state, setState, prettyBalance, currentExchangeRate, isCheckingBalance, addressToCheck, } = useContext(HarvestContext);
   const getThisReward = reward => {
     setState(prevState => ({ ...prevState, minimumHarvestAmount: reward }));
   };
@@ -103,11 +116,130 @@ const FarmingTable = () => {
   }, [setState, state.summaries]);
 
   useEffect(() => {
+    const getAssets = async () => {
+
+      const ethersProvider = new ethers.providers.Web3Provider(state.provider);
+
+      const walletAddress = isCheckingBalance ? addressToCheck : state.address;
+
+      // get all pools and vaults
+      const [pools, vaults] = await Promise.all([API.getPools(), API.getVaults()])
+
+      // get all data for the table
+      const assetData = vaults.map(async (vault) => {
+
+        // a pool that has the same token as a vault
+        const pool = pools.find((pool) => {
+          return vault.contract.address === pool.lpToken.address;
+        })
+
+        const vaultContract = new Contract(vault.contract.address, FTOKEN_ABI, ethersProvider);
+
+        if (pool) {
+
+          const poolAddress = pool.contract.address;
+          const poolContract = new Contract(poolAddress, REWARDS_ABI, ethersProvider);
+
+          const rewardIsFarm = pool.rewardToken.address === '0xa0246c9032bc3a600820415ae600c6388619a14d';
+
+
+          const getPricePerFullShare = async () => {
+            if (rewardIsFarm) {
+              return;
+            }
+
+            const iFARMContract = new Contract(pool.rewardToken.address, iFARM_ABI, ethersProvider);
+
+            const price = await iFARMContract.getPricePerFullShare();
+            const intPrice = parseInt(price._hex, 16);
+            const prettyPrice = makeBalancePrettier(intPrice, rewardDecimals);
+            return prettyPrice;
+          }
+
+          /** 
+           * vaultBalance - balance of a wallet in the vault (are in fToken)
+           * poolBalance - balance of a wallet in the pool (are in fToken)
+           * fTokenPrice - the price are in USD
+           * rewardTokenPrice - the price are in USD (for FARM)
+           * reward - reward of a wallet in the pool
+           * poolTotalSupply - the total number of tokens in the pool of all participants
+           * getPricePerFullShare = iFARMPrice / (FARMPRice * 10 ** rewardDecimals)
+           */
+          const [vaultBalance, poolBalance, fTokenPrice, rewardTokenPrice, reward, poolTotalSupply, pricePerFullShare] =
+            await Promise.all([
+              vaultContract.balanceOf(walletAddress),
+              poolContract.balanceOf(walletAddress),
+              API.getTokenPrice(pool.contract.address),
+              API.getTokenPrice(pool.rewardToken.address),
+              poolContract.earned(walletAddress),
+              poolContract.totalSupply(),
+              getPricePerFullShare(),
+            ]);
+
+          const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
+          const poolBalanceIntNumber = parseInt(poolBalance._hex, 16);
+
+
+          const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
+          const prettyPoolBalance = makeBalancePrettier(poolBalanceIntNumber, vault.decimals);
+          const prettyRewardTokenBalance = makeBalancePrettier(reward, rewardDecimals);
+          const rewardTokenAreInFARM = rewardIsFarm ? prettyRewardTokenBalance : prettyRewardTokenBalance * pricePerFullShare;
+
+          const percentOfPool = `${(poolBalance * 100 / poolTotalSupply).toFixed(3)}%`;
+
+          /** All account assets that contains in the pool are in USD */
+          const calcValue = () => {
+            return (fTokenPrice * prettyPoolBalance + rewardTokenPrice * rewardTokenAreInFARM) * currentExchangeRate
+          }
+
+          return {
+            name: vault.symbol,
+            earnFarm: !vaultsWithoutReward.has(poolAddress),
+            farmToClaim: rewardTokenAreInFARM,
+            stakedBalance: prettyPoolBalance,
+            percentOfPool,
+            value: calcValue(),
+            unstakedBalance: prettyVaultBalance,
+            address: vault.contract.address,
+            rewardIsFarm
+          }
+        }
+        const vaultBalance = await vaultContract.balanceOf(walletAddress);
+        const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
+        const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
+
+        return {
+          name: vault.name,
+          earnFarm: false,
+          farmToClaim: 0,
+          stakedBalance: 0,
+          percentOfPool: 0,
+          value: 0,
+          unstakedBalance: prettyVaultBalance,
+          address: vault.contract.address,
+        }
+
+
+      });
+      const assets = await Promise.all(assetData);
+      const nonZeroAssets = assets.filter((asset) => {
+        return asset.unstakedBalance || asset.stakedBalance || asset.farmToclaim;
+      })
+      console.log(nonZeroAssets)
+      setAssets(nonZeroAssets);
+    }
+
+    if (!state.provider) { return }
+
+    getAssets();
+
+  }, [state.provider]);
+
+  useEffect(() => {
     if (state.totalFarmEarned === 0) {
       getTotalFarmEarned();
     }
     const array = state.summaries.map(utils.prettyPosition);
-    debugger
     setSortedSummary(array);
   }, [getTotalFarmEarned, state.summaries, state.totalFarmEarned]);
 
@@ -119,8 +251,9 @@ const FarmingTable = () => {
   });
 
   return (
-    <ThemeProvider theme={state.theme === 'dark' ? darkTheme : lightTheme}>
-      {state.display ? (
+    <>
+
+      {/* {state.display &&  // the old implementation using Deploy.js
         <Tabs>
           <PanelTabContainerLeft>
             <PanelTab>
@@ -128,7 +261,7 @@ const FarmingTable = () => {
             </PanelTab>
           </PanelTabContainerLeft>
         </Tabs>
-      ) : null}
+      }
       {state.display ? (
         <TableContainer>
           {sortedSummary.length === 0 ? (
@@ -161,36 +294,112 @@ const FarmingTable = () => {
                   );
                 })}
               </MainTableHeader>
-              {sortedSummary.map(summary => (
-                <MainTableRow key={summary.address}>
-                  <div className="name">{summary.name}</div>
-                  <div className="active">{String(summary.isActive)}</div>
-                  <div
-                    className="earned-rewards"
-                    onKeyUp={() => getThisReward(summary.earnedRewards)}
-                    onClick={() => getThisReward(summary.earnedRewards)}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    {parseFloat(summary.earnedRewards).toFixed(6)}
-                  </div>
-                  <div className="staked">{parseFloat(summary.stakedBalance).toFixed(6)}</div>
-                  <div className="pool">{summary.percentOfPool}</div>
-                  <div className="value">
-                    {prettyBalance(summary.usdValueOf * currentExchangeRate)}
-                  </div>
-                  <div className="unstaked">
-                    {Math.floor(parseFloat(summary.unstakedBalance)).toFixed(6)}
-                  </div>
-                </MainTableRow>
-              ))}
+              {sortedSummary.map(summary => {
+                return (
+                  <MainTableRow key={summary.address}>
+                    <div className="name">{summary.name}</div>
+                    <div className="active">{String(summary.isActive)}</div>
+                    <div
+                      className="earned-rewards"
+                      onKeyUp={() => getThisReward(summary.earnedRewards)}
+                      onClick={() => getThisReward(summary.earnedRewards)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      {parseFloat(summary.earnedRewards).toFixed(6)}
+                    </div>
+                    <div className="staked">{parseFloat(summary.stakedBalance).toFixed(6)}</div>
+                    <div className="pool">{summary.percentOfPool}</div>
+                    <div className="value">
+                      {prettyBalance(summary.usdValueOf * currentExchangeRate)}
+                    </div>
+                    <div className="unstaked">
+                      {Math.floor(parseFloat(summary.unstakedBalance)).toFixed(6)}
+                    </div>
+                  </MainTableRow>
+                )
+              })}
             </MainTableInner>
           )}
         </TableContainer>
       ) : (
         <FarmTableSkeleton state={state} />
       )}
-    </ThemeProvider>
+    </>
+  ); */}
+      {state.display &&
+        <Tabs>
+          <PanelTabContainerLeft>
+            <PanelTab>
+              <p>your staked assets</p>
+            </PanelTab>
+          </PanelTabContainerLeft>
+        </Tabs>
+      }
+      {state.display ? (
+        <TableContainer>
+          {sortedSummary.length === 0 ? (
+            <NoAssetTable>
+              <div className="header">
+                <p>You currently are not staking any assets</p>
+              </div>
+              <div className="content">
+                <div className="name">
+                  {' '}
+                  <p>Stake assets to start earning!</p>{' '}
+                </div>
+              </div>
+            </NoAssetTable>
+          ) : (
+            <MainTableInner>
+              <MainTableHeader>
+                {columns.map((col, i) => {
+                  return (
+                    <div
+                      className={`${col.name} table-header`}
+                      key={col.name}
+                      // onKeyUp={() => sortSummary(col, i)}
+                      // onClick={() => sortSummary(col, i)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      {col.name}
+                    </div>
+                  );
+                })}
+              </MainTableHeader>
+              {assets.map(asset => {
+                return (
+                  <MainTableRow key={asset.address}>
+                    <div className="name">{asset.name}</div>
+                    <div className="active">{String(asset.earnFarm)}</div>
+                    <div
+                      className="earned-rewards"
+                      // onKeyUp={() => getThisReward(summary.earnedRewards)}
+                      // onClick={() => getThisReward(summary.earnedRewards)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      {asset.farmToClaim}
+                    </div>
+                    <div className="staked">{asset.stakedBalance}</div>
+                    <div className="pool">{asset.percentOfPool}</div>
+                    <div className="value">
+                      {asset.value}
+                    </div>
+                    <div className="unstaked">
+                      {asset.unstakedBalance}
+                    </div>
+                  </MainTableRow>
+                )
+              })}
+            </MainTableInner>
+          )}
+        </TableContainer>
+      ) : (
+        <FarmTableSkeleton state={state} />
+      )}
+    </>
   );
 };
 

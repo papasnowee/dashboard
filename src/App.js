@@ -24,7 +24,6 @@ import CheckBalance from './components/checkBalance/CheckBalance';
 import TokenMessage from './components/statusMessages/TokenMessage';
 import HarvestAndStakeMessage from './components/statusMessages/HarvestAndStakeMessage';
 import Sidedrawer from './components/userSettings/sidedrawer/Sidedrawer';
-import { getBalanceFromVault } from './lib2/utils/StackedBalance';
 
 const { ethers } = harvest;
 
@@ -49,6 +48,9 @@ const ErrorModal = Loadable({
 });
 
 function App() {
+  const [personalGasSaved, setPersonalGasSaved] = useState(0);
+  // for read-only-mode
+  const [personalGasSavedToCheck, setPersonalGasSavedToCheck] = useState(0);
   // for currency conversion
   const [baseCurrency, setBaseCurrency] = useState(
     window.localStorage.getItem('HarvestFinance:currency') || 'USD',
@@ -66,11 +68,14 @@ function App() {
     first: '',
     second: '',
   });
+
+  /**The wallet address that user check in read-mode */
   const [addressToCheck, setAddressToCheck] = useState('');
   const [state, setState] = useState({
     provider: undefined,
     signer: undefined,
     manager: undefined,
+    /** The wallet address of an user */
     address: '',
     addressToCheck: '',
     summaries: [],
@@ -133,7 +138,7 @@ function App() {
       .catch(err => {
         console.log(err);
       });
-
+      
     state.manager
       .summary(address)
       .then(summaries =>
@@ -178,6 +183,29 @@ function App() {
         console.log(err);
       });
   };
+
+  const getPersonalGasSaved = async (address, setGasInfo) => {
+    address &&
+      (await axios
+        .get(
+          `${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${address}`,
+        )
+        .then(res => {
+          setGasInfo(Math.round(res.data.data));
+        })
+        .catch(err => {
+          console.log(err);
+        }));
+  };
+  // using state.address
+  useEffect(() => {
+    getPersonalGasSaved(state.address, setPersonalGasSaved);
+  }, [state.address]);
+
+  // using addressToCheck
+  useEffect(() => {
+    getPersonalGasSaved(addressToCheck, setPersonalGasSavedToCheck);
+  }, [addressToCheck]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -326,6 +354,8 @@ function App() {
       value={{
         state,
         setState,
+        personalGasSaved,
+        personalGasSavedToCheck,
         radio,
         setRadio,
         toggleRadio,

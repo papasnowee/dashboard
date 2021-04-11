@@ -2,7 +2,7 @@
     {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "[javascript]": {
-          "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+          "editor.defaultFormatter": "vscode.typescript-language-features"
         },
         "[javascriptreact]": {
           "editor.defaultFormatter": "vscode.typescript-language-features"

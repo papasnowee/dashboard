@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import HarvestContext from '../Context/HarvestContext';
 import { fonts } from '../styles/appStyles';
 import harvest from '../lib/index';
-import { getBalanceFromVault } from '../lib2/utils/StackedBalance';
 
 const { ethers } = harvest;
 
@@ -111,7 +110,6 @@ const WelcomeText = ({ disconnect, setAddress, setConnection, openModal }) => {
         if (!provider) {
           openModal('No provider, please install a supported Web3 wallet.', 'error');
         } else {
-          getBalanceFromVault(provider)
           window.ethereum
             .enable()
             .then(_res => {

@@ -41,7 +41,6 @@ export default class ERC20Extended extends ethers.Contract {
    * @return {String} the percentage, string formatted
    */
   async percentageOwnership(address) {
-    debugger
     return this.percentageOfTotal(await this.balanceOf(address));
   }
 }
