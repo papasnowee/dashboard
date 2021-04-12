@@ -90,14 +90,14 @@ const AssetTable = () => {
   const { state } = useContext(HarvestContext);
 
   return (
-    <ThemeProvider theme={state.theme === 'dark' ? darkTheme : lightTheme}>
-      {state.display ? (
+    <>
+      {state.display && (
         <PanelTabContainerLeft>
           <PanelTab>
             <p>your underlying assets</p>
           </PanelTab>
         </PanelTabContainerLeft>
-      ) : null}
+      )}
 
       {state.display ? (
         <TableContainer>
@@ -139,7 +139,7 @@ const AssetTable = () => {
       ) : (
         <AssetTableSkeleton state={state} />
       )}
-    </ThemeProvider>
+    </>
   );
 };
 

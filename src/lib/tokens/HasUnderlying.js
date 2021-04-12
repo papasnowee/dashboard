@@ -31,15 +31,15 @@ export default class HasUnderlying extends Token {
    * @param {BigNumberish} tokens the number of LP tokens
    * @param {bool} passthrough pass through to the lowest assets.
    */
-  async calcShare(tokens, passthrough) {
-    if (tokens.isZero()) return new UnderlyingBalances();
+  async calcShare(tokensAmount, passthrough) {
+    if (tokensAmount.isZero()) return new UnderlyingBalances();
     const [total, reserves] = await Promise.all([this.totalSupply(), this.getReserves()]);
     if (total.isZero()) return new UnderlyingBalances();
 
     const shares = new UnderlyingBalances();
 
     reserves.forEach(async reserve => {
-      const balance = reserve.balance.mul(tokens).div(total);
+      const balance = reserve.balance.mul(tokensAmount).div(total);
       if (reserve.asset.type && passthrough) {
         const token = getTokenFromAsset(reserve.asset, this.provider);
         // eslint-disable-next-line no-await-in-loop
@@ -71,10 +71,18 @@ export default class HasUnderlying extends Token {
    * @param {BigNumber} amount the amount of tokens to value
    * @return {BigNumber} the value in microdollars
    */
-  async usdValueOf(amount) {
+  async usdValueOf(amount, address) {
+    // if (address.toLowerCase() === '0x7c497298d9576499e17f9564ce4e13faa87a9b33') {
+    //   debugger
+    // }
     if (amount.isZero()) return ethers.BigNumber.from(0);
     const shares = await this.calcShare(amount, true);
     const sharesUsdValue = await shares.usdValueOf(this.provider);
+    // if (address.toLowerCase() === '0x7c497298d9576499e17f9564ce4e13faa87a9b33') {
+    //   console.log('1114 value ftoken  shares, sharesUsdValue', shares, sharesUsdValue)
+    //   debugger
+    // }
+
     return sharesUsdValue;
   }
 }

@@ -16,7 +16,7 @@ import {
 import HarvestContext from '../../Context/HarvestContext';
 import FarmTableSkeleton from './FarmTableSkeleton';
 import API from '../../api';
-import { FTOKEN_ABI, REWARDS_ABI, iFARM_ABI } from '../../lib/data/ABIs';
+import { FTOKEN_ABI, REWARDS_ABI, iFARM_ABI, fTOKEN_ABI2 } from '../../lib/data/ABIs';
 import { makeBalancePrettier } from './utils';
 import { vaultsWithoutReward, rewardDecimals } from './constants';
 
@@ -128,6 +128,9 @@ const FarmingTable = () => {
       // get all data for the table
       const assetData = vaults.map(async (vault) => {
 
+        // IFarm vault?
+        const isIFarm = vault.contract.address.toLowerCase() === '0x1571eD0bed4D987fe2b498DdBaE7DFA19519F651'.toLowerCase();
+
         // a pool that has the same token as a vault
         const pool = pools.find((pool) => {
           return vault.contract.address === pool.lpToken.address;
@@ -142,17 +145,27 @@ const FarmingTable = () => {
 
           const rewardIsFarm = pool.rewardToken.address === '0xa0246c9032bc3a600820415ae600c6388619a14d';
 
-
+          // for iFARM
           const getPricePerFullShare = async () => {
             if (rewardIsFarm) {
               return;
             }
 
-            const iFARMContract = new Contract(pool.rewardToken.address, iFARM_ABI, ethersProvider);
+            const iFARMContract = new Contract(pool.rewardToken.address, FTOKEN_ABI, ethersProvider);
 
             const price = await iFARMContract.getPricePerFullShare();
             const intPrice = parseInt(price._hex, 16);
             const prettyPrice = makeBalancePrettier(intPrice, rewardDecimals);
+            return prettyPrice;
+          }
+
+          const getPricePerFullShareFToken = async () => {
+
+            // const fTokenContract = new Contract(vault.contract.address, fTOKEN_ABI2, ethersProvider);
+
+            const price = await vaultContract.getPricePerFullShare();
+            const intPrice = parseInt(price._hex, 16);
+            const prettyPrice = makeBalancePrettier(intPrice, vault.decimals);
             return prettyPrice;
           }
 
@@ -165,15 +178,17 @@ const FarmingTable = () => {
            * poolTotalSupply - the total number of tokens in the pool of all participants
            * getPricePerFullShare = iFARMPrice / (FARMPRice * 10 ** rewardDecimals)
            */
-          const [vaultBalance, poolBalance, fTokenPrice, rewardTokenPrice, reward, poolTotalSupply, pricePerFullShare] =
+          const [vaultBalance, poolBalance, underlyingPrice, rewardTokenPrice, reward,
+            poolTotalSupply, pricePerFullShare, pricePerFullShareFToken] =
             await Promise.all([
               vaultContract.balanceOf(walletAddress),
               poolContract.balanceOf(walletAddress),
-              API.getTokenPrice(pool.contract.address),
+              API.getTokenPrice(vault.underlying.address),
               API.getTokenPrice(pool.rewardToken.address),
               poolContract.earned(walletAddress),
               poolContract.totalSupply(),
               getPricePerFullShare(),
+              getPricePerFullShareFToken(),
             ]);
 
           const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
@@ -189,32 +204,63 @@ const FarmingTable = () => {
 
           /** All account assets that contains in the pool are in USD */
           const calcValue = () => {
-            return (fTokenPrice * prettyPoolBalance + rewardTokenPrice * rewardTokenAreInFARM) * currentExchangeRate
+            if (vault.contract.address.toLowerCase() === '0x053c80ea73dc6941f518a68e2fc52ac45bde7c9c') {
+              console.log('1111 stakedBalance, rewardBalance in farm,  rewardValue',
+                prettyPoolBalance, rewardTokenAreInFARM, rewardTokenAreInFARM * rewardTokenPrice);
+              console.log('111112  fTokenPrice, rewardTokenPrice , pricePerFullShareFToken', underlyingPrice, rewardTokenPrice, pricePerFullShareFToken);
+              // debugger
+            }
+            return (underlyingPrice * prettyPoolBalance * pricePerFullShareFToken + rewardTokenPrice * rewardTokenAreInFARM) * currentExchangeRate
           }
 
           return {
-            name: vault.symbol,
+            name: vault.contract.name,
             earnFarm: !vaultsWithoutReward.has(poolAddress),
             farmToClaim: rewardTokenAreInFARM,
             stakedBalance: prettyPoolBalance,
             percentOfPool,
-            value: calcValue(),
+            value: `$${calcValue().toFixed(6)}`,
             unstakedBalance: prettyVaultBalance,
             address: vault.contract.address,
             rewardIsFarm
           }
         }
+
+
         const vaultBalance = await vaultContract.balanceOf(walletAddress);
         const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
         const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
 
+        if (isIFarm) {
+          const [farmPrice, totalSupply, underlyingBalanceWithInvestmentForHolder] = await Promise.all([
+            API.getTokenPrice(vault.underlying.address), vaultContract.totalSupply(),
+            vaultContract.underlyingBalanceWithInvestmentForHolder(walletAddress)]);
+
+          const intUnderlyingBalanceWithInvestmentForHolder = parseInt(underlyingBalanceWithInvestmentForHolder._hex, 16);
+          const value = (intUnderlyingBalanceWithInvestmentForHolder * farmPrice / 10 ** vault.decimals).toFixed(6);
+          // const prettyIntUnderlyingBalanceWithInvestmentForHolder = makeBalancePrettier(intUnderlyingBalanceWithInvestmentForHolder. vault.decimals);
+
+
+          const percentOfPool = (vaultBalance / totalSupply * 100).toFixed(6)
+          return {
+            name: vault.contract.name,
+            earnFarm: true,
+            farmToClaim: 0.000000,
+            stakedBalance: prettyVaultBalance,
+            percentOfPool: `${percentOfPool}%`,
+            value: `$${value}`,
+            unstakedBalance: 0,
+            address: vault.contract.address,
+          }
+        }
+
         return {
-          name: vault.name,
+          name: vault.contract.name,
           earnFarm: false,
-          farmToClaim: 0,
-          stakedBalance: 0,
-          percentOfPool: 0,
-          value: 0,
+          farmToClaim: 0.000000,
+          stakedBalance: 0.000000,
+          percentOfPool: '0.000%',
+          value: '$0.00',
           unstakedBalance: prettyVaultBalance,
           address: vault.contract.address,
         }

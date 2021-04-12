@@ -138,9 +138,6 @@ export class PoolManager {
    * @return {BigNumber} total rewards
    */
   usdValueOf(address) {
-    if (this.pools.address === '0x8Bf3c1c7B1961764Ecb19b4FC4491150ceB1ABB1') {
-      debugger
-    }
     return this.usdValues(address).then(rewards => {
       let total = ethers.BigNumber.from(0);
       rewards.forEach(reward => {

@@ -138,7 +138,7 @@ function App() {
       .catch(err => {
         console.log(err);
       });
-      
+
     state.manager
       .summary(address)
       .then(summaries =>

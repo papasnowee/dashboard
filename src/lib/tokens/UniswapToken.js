@@ -32,6 +32,7 @@ export default class UniswapToken extends HasUnderlying {
       return this.token0Asset;
     }
     const address = await this.token0();
+    
     this.token0Asset = getTokenFromAddress(address, this.provider);
     return this.token0Asset;
   }

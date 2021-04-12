@@ -1,8 +1,33 @@
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import data from './data/deploys';
 import { getTokenFromAsset } from './tokens';
 
+interface IOutput {
+  address: string;
+  user: any;
+  pool: any;
+  isActive: boolean;
+  stakedBalance: any;
+  unstakedBalance: any;
+  earnedRewards: any;
+  percentageOwnership: string;
+  usdValueOf: any;
+  historicalRewards: any;
+  pricePerFullShare: BigNumber | undefined;
+  underlyingBalanceOf?: any;
+}
+
 export default class RewardsPool extends ethers.Contract {
+
+  name: string;
+  pool: any;
+  lptoken: any;
+  reward: any;
+  unstakedBalance: ethers.Contract['balanceOf'];;
+  stakedBalance: ethers.Contract['balanceOf'];
+  underlyingBalanceOf: any;
+  pricePerFullShare?: BigNumber;
+
   constructor(pool, abi, provider) {
     super(pool.address, abi, provider);
     this.name = pool.name ? pool.name : pool.asset.name;
@@ -24,7 +49,7 @@ export default class RewardsPool extends ethers.Contract {
   }
 
   getPricePerFullShare() {
-    let pricePerShare = null;
+    let pricePerShare: null | string = null;
     if (this.pool.asset.type === 'ftoken' && data.isAddressActive(this.pool.address)) {
       this.lptoken
         .getPricePerFullShare()
@@ -48,14 +73,23 @@ export default class RewardsPool extends ethers.Contract {
    * @return {String} the percentage, string formatted
    */
   async usdValueOf(address) {
+
     const [stakedBalance, rewardBalance] = await Promise.all([
       this.stakedBalance(address),
       this.earnedRewards(address),
     ]);
     const [stakedValue, rewardValue] = await Promise.all([
-      this.lptoken.usdValueOf(stakedBalance),
-      this.reward.usdValueOf(rewardBalance),
+      this.lptoken.usdValueOf(stakedBalance, this.pool.address.toLowerCase()),
+      this.reward.usdValueOf(rewardBalance, this.pool.address.toLowerCase()),
     ]);
+    const pretty = (bigNumber) => {
+      return parseInt(bigNumber._hex, 16) / 10 ** 18
+    }
+    if (this.pool.address && this.pool.address.toLowerCase() === '0x6ac4a7ab91e6fd098e13b7d347c6d4d1494994a2') {
+      // debugger
+      console.log('2222 stakedBalance, rewardBalance, stakedValue, rewardBalance',
+        pretty(stakedBalance), pretty(rewardBalance), parseInt(stakedValue._hex, 16), parseInt(rewardValue._hex, 16))
+    }
 
     return stakedValue.add(rewardValue);
   }
@@ -123,7 +157,7 @@ export default class RewardsPool extends ethers.Contract {
       this.historicalRewards(address),
     ]);
 
-    const output = {
+    const output: IOutput = {
       address: this.address,
       user: address,
       pool: this.pool,

@@ -6,5 +6,5 @@ const decimalPlace = 6;
 export const makeBalancePrettier = (balance: number, decimals: IVault['decimals']) => {
     // balance calculated in tokens
     const balancePerToken = balance / (Math.pow(10, decimals));
-    return Number(balancePerToken.toFixed(decimalPlace));
+    return Number(balancePerToken);
 }
