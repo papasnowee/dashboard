@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext } from 'react';
 import HarvestContext from '../../../Context/HarvestContext';
 import { CurrencyContainer } from './CurrencyStyles';
 
@@ -13,15 +13,13 @@ const Currency = () => {
     window.localStorage.setItem('HarvestFinance:currency', e.target.value);
   };
 
-  const options = useMemo(() => {
-    return Object.entries(exchangeRates).map(([key]) => {
+    const options =  Object.entries(exchangeRates).map(([key]) => {
       return (
         <option key={key} value={key}>
           {key}
         </option>
       );
     });
-  }, [exchangeRates]);
 
   return (
     <CurrencyContainer>
