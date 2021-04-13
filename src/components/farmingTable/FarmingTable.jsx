@@ -16,7 +16,7 @@ import {
 import HarvestContext from '../../Context/HarvestContext';
 import FarmTableSkeleton from './FarmTableSkeleton';
 import API from '../../api';
-import { FTOKEN_ABI, REWARDS_ABI, iFARM_ABI, fTOKEN_ABI2 } from '../../lib/data/ABIs';
+import { FTOKEN_ABI, REWARDS_ABI } from '../../lib/data/ABIs';
 import { makeBalancePrettier } from './utils';
 import { vaultsWithoutReward, rewardDecimals } from './constants';
 
