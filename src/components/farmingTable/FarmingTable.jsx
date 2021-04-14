@@ -39,6 +39,9 @@ const columns = [
     name: '% of Pool',
   },
   {
+    name: 'Underlying balance'
+  },
+  {
     name: 'Value',
   },
   {
@@ -48,17 +51,9 @@ const columns = [
 
 const FarmingTable = () => {
 
-  const [pools, setPools] = useState([]);
-  const [vaults, setVaults] = useState([]);
-  const [assets, setAssets] = useState([]);
 
+  const { state, setState, currentExchangeRate, isCheckingBalance, addressToCheck, setAssets, assets} = useContext(HarvestContext);
 
-
-
-  const { state, setState, prettyBalance, currentExchangeRate, isCheckingBalance, addressToCheck, } = useContext(HarvestContext);
-  const getThisReward = reward => {
-    setState(prevState => ({ ...prevState, minimumHarvestAmount: reward }));
-  };
   const [sortedSummary, setSortedSummary] = useState([]);
   const [sortDirection, setSortDirection] = useState(1);
   const sortSummary = (_col, index) => {
@@ -204,14 +199,11 @@ const FarmingTable = () => {
 
           /** All account assets that contains in the pool are in USD */
           const calcValue = () => {
-            if (vault.contract.address.toLowerCase() === '0x053c80ea73dc6941f518a68e2fc52ac45bde7c9c') {
-              console.log('1111 stakedBalance, rewardBalance in farm,  rewardValue',
-                prettyPoolBalance, rewardTokenAreInFARM, rewardTokenAreInFARM * rewardTokenPrice);
-              console.log('111112  fTokenPrice, rewardTokenPrice , pricePerFullShareFToken', underlyingPrice, rewardTokenPrice, pricePerFullShareFToken);
-              // debugger
-            }
             return (underlyingPrice * prettyPoolBalance * pricePerFullShareFToken + rewardTokenPrice * rewardTokenAreInFARM) * currentExchangeRate
           }
+
+          // fTokens balance in underlying Tokens;
+          const underlyingBalance = (prettyPoolBalance * pricePerFullShareFToken).toFixed(6);
 
           return {
             name: vault.contract.name,
@@ -222,7 +214,8 @@ const FarmingTable = () => {
             value: `$${calcValue().toFixed(6)}`,
             unstakedBalance: prettyVaultBalance,
             address: vault.contract.address,
-            rewardIsFarm
+            rewardIsFarm,
+            underlyingBalance,
           }
         }
 
@@ -245,33 +238,38 @@ const FarmingTable = () => {
           return {
             name: vault.contract.name,
             earnFarm: true,
-            farmToClaim: 0.000000,
+            farmToClaim: 0,
             stakedBalance: prettyVaultBalance,
             percentOfPool: `${percentOfPool}%`,
-            value: `$${value}`,
+            value: value,
             unstakedBalance: 0,
             address: vault.contract.address,
+            underlyingBalance: 0,
           }
         }
 
         return {
           name: vault.contract.name,
           earnFarm: false,
-          farmToClaim: 0.000000,
-          stakedBalance: 0.000000,
+          farmToClaim: 0,
+          stakedBalance: 0,
           percentOfPool: '0.000%',
-          value: '$0.00',
+          value: 0,
           unstakedBalance: prettyVaultBalance,
           address: vault.contract.address,
+          underlyingBalance: 0,
         }
 
 
       });
       const assets = await Promise.all(assetData);
       const nonZeroAssets = assets.filter((asset) => {
-        return asset.unstakedBalance || asset.stakedBalance || asset.farmToclaim;
+        return asset.farmToclaim || asset.stakedBalance || asset.value || asset.unstakedBalance || asset.underlyingBalance ;
       })
-      console.log(nonZeroAssets)
+
+      const valueSum = nonZeroAssets.reduce((acc, currentAsset) => {
+        return acc + currentAsset.value;
+      })
       setAssets(nonZeroAssets);
     }
 
@@ -430,6 +428,9 @@ const FarmingTable = () => {
                     </div>
                     <div className="staked">{asset.stakedBalance}</div>
                     <div className="pool">{asset.percentOfPool}</div>
+                    <div className="underlying">
+                      {asset.underlyingBalance}
+                    </div>
                     <div className="value">
                       {asset.value}
                     </div>

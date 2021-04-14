@@ -23,48 +23,12 @@ export class PoolManager {
    * @param {ethers.Provider} provider provider
    * @return {PoolManager} manager
    */
-  static weekOne(provider) {
-    return new PoolManager(weekOne(provider), provider);
-  }
-
-  static test(provider) {
-    return new PoolManager(test(provider), provider);
-  }
-
-  /**
-   * @param {ethers.Provider} provider provider
-   * @return {PoolManager} manager
-   */
-  static weekTwo(provider) {
-    return new PoolManager(weekTwo(provider), provider);
-  }
-
-  /**
-   * @param {ethers.Provider} provider provider
-   * @return {PoolManager} manager
-   */
-  static activePools(provider) {
-    return new PoolManager(activePools(provider), provider);
-  }
-
-  /**
-   * @param {ethers.Provider} provider provider
-   * @return {PoolManager} manager
-   */
-  static inactivePools(provider) {
-    return new PoolManager(inactivePools(provider), provider);
-  }
-
-  /**
-   * @param {ethers.Provider} provider provider
-   * @return {PoolManager} manager
-   */
   static allPastPools(provider) {
     return new PoolManager(allPastPools(provider), provider);
   }
 
   /**
-   * @param {Array} pools user address to check balances
+   * @param {Array} pools ethers Contract instances
    * @param {String} contractMethodName function to invoke
    * @param {Array} args array of function args
    * @param {String} propName name of prop to put result in
@@ -79,7 +43,6 @@ export class PoolManager {
         output.name = pool.name;
         output.address = pool.address;
         output[propName] = await pool[contractMethodName](...args);
-
         return output;
       }
 

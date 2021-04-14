@@ -44,7 +44,7 @@ export const MainTableInner = styled.div`
 `;
 export const MainTableRow = styled.div`
   display: grid;
-  grid-template-columns: 0.75fr 0.3fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
+  grid-template-columns: 0.75fr 0.3fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
   font-size: 1.7rem;
   align-items: center;
   font-family: ${fonts.contentFont};
@@ -92,6 +92,8 @@ export const MainTableRow = styled.div`
       margin-left: 1.5rem;
     }
   }
+  .underlying {
+  }
   .stake-but {
     margin-right: 10px;
   }
@@ -114,7 +116,7 @@ export const MainTableRow = styled.div`
 `;
 export const MainTableHeader = styled.div`
   display: grid;
-  grid-template-columns: 0.75fr 0.3fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
+  grid-template-columns: 0.75fr 0.3fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
   //grid-gap: 20px;
   font-size: 1.7rem;
   font-family: ${fonts.headerFont};

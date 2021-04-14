@@ -71,17 +71,10 @@ export default class HasUnderlying extends Token {
    * @param {BigNumber} amount the amount of tokens to value
    * @return {BigNumber} the value in microdollars
    */
-  async usdValueOf(amount, address) {
-    // if (address.toLowerCase() === '0x7c497298d9576499e17f9564ce4e13faa87a9b33') {
-    //   debugger
-    // }
+  async usdValueOf(amount) {
     if (amount.isZero()) return ethers.BigNumber.from(0);
     const shares = await this.calcShare(amount, true);
     const sharesUsdValue = await shares.usdValueOf(this.provider);
-    // if (address.toLowerCase() === '0x7c497298d9576499e17f9564ce4e13faa87a9b33') {
-    //   console.log('1114 value ftoken  shares, sharesUsdValue', shares, sharesUsdValue)
-    //   debugger
-    // }
 
     return sharesUsdValue;
   }

@@ -43,6 +43,7 @@ export default class RewardsPool extends ethers.Contract {
     if (this.lptoken.underlyingBalanceOf) {
       this.underlyingBalanceOf = async (address, passthrough) => {
         const balance = await this.balanceOf(address);
+        // return ftokens balance in are underlying-token
         return this.lptoken.calcShare(balance, passthrough);
       };
     }
@@ -82,15 +83,7 @@ export default class RewardsPool extends ethers.Contract {
       this.lptoken.usdValueOf(stakedBalance, this.pool.address.toLowerCase()),
       this.reward.usdValueOf(rewardBalance, this.pool.address.toLowerCase()),
     ]);
-    const pretty = (bigNumber) => {
-      return parseInt(bigNumber._hex, 16) / 10 ** 18
-    }
-    if (this.pool.address && this.pool.address.toLowerCase() === '0x6ac4a7ab91e6fd098e13b7d347c6d4d1494994a2') {
-      // debugger
-      console.log('2222 stakedBalance, rewardBalance, stakedValue, rewardBalance',
-        pretty(stakedBalance), pretty(rewardBalance), parseInt(stakedValue._hex, 16), parseInt(rewardValue._hex, 16))
-    }
-
+    
     return stakedValue.add(rewardValue);
   }
 

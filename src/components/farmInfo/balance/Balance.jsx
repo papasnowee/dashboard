@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
-import styled, { ThemeProvider } from 'styled-components';
+import styled from 'styled-components';
 import HarvestContext from '../../../Context/HarvestContext';
-import { darkTheme, lightTheme, fonts } from '../../../styles/appStyles';
+import { fonts } from '../../../styles/appStyles';
 import harvest from '../../../lib/index.js';
 import BalanceSkeleton from './BalanceSkeleton';
 
@@ -44,26 +44,22 @@ const BluePanel = styled.div`
 `;
 
 const Balance = () => {
-  const { state, currentExchangeRate, prettyBalance } = useContext(HarvestContext);
-  const [userBalance, setUserBalance] = useState(ethers.BigNumber.from(0));
+  const { state, currentExchangeRate, prettyBalance, assets } = useContext(HarvestContext);
+  const [userBalance, setUserBalance] = useState(0);
 
   useEffect(() => {
-    balance();
-    // eslint-disable-next-line
-  }, [state.summaries]);
+    if (assets.length) {
+     const stakedBalance = assets.reduce((acc, currentAsset) => {
+      return acc + currentAsset.value;
+    })
 
-  const balance = () => {
-    let ub = ethers.BigNumber.from(0);
+    setUserBalance(stakedBalance);
+  }
+  }, [assets])
 
-    for (let i = 0; i < state.summaries.length; i++) {
-      ub = ub.add(state.summaries[i].summary.usdValueOf);
-
-      setUserBalance(ub);
-    }
-  };
 
   return (
-    <ThemeProvider theme={state.theme === 'dark' ? darkTheme : lightTheme}>
+    <>
       {state.display ? (
         <BluePanel>
           <h1>{prettyBalance(userBalance * currentExchangeRate)}</h1>
@@ -72,7 +68,7 @@ const Balance = () => {
       ) : (
         <BalanceSkeleton state={state} />
       )}
-    </ThemeProvider>
+    </>
   );
 };
 

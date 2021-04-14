@@ -48,6 +48,7 @@ const ErrorModal = Loadable({
 });
 
 function App() {
+  const [assets, setAssets] = useState([]);
   const [personalGasSaved, setPersonalGasSaved] = useState(0);
   // for read-only-mode
   const [personalGasSavedToCheck, setPersonalGasSavedToCheck] = useState(0);
@@ -352,6 +353,8 @@ function App() {
   return (
     <HarvestContext.Provider
       value={{
+        assets,
+        setAssets,
         state,
         setState,
         personalGasSaved,
