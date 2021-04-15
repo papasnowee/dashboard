@@ -2,10 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import styled from 'styled-components';
 import HarvestContext from '../../../Context/HarvestContext';
 import { fonts } from '../../../styles/appStyles';
-import harvest from '../../../lib/index.js';
 import BalanceSkeleton from './BalanceSkeleton';
-
-const { ethers } = harvest;
 
 const BluePanel = styled.div`
   position: relative;
@@ -44,23 +41,23 @@ const BluePanel = styled.div`
 `;
 
 const Balance = () => {
-  const { state, currentExchangeRate, prettyBalance, assets } = useContext(HarvestContext);
+  const { state, currentExchangeRate, prettyBalance, assets, displayFarmInfo } = useContext(HarvestContext);
   const [userBalance, setUserBalance] = useState(0);
 
   useEffect(() => {
     if (assets.length) {
-     const stakedBalance = assets.reduce((acc, currentAsset) => {
-      return acc + currentAsset.value;
-    })
+      const stakedBalance = assets.reduce((acc, currentAsset) => {
+        return acc + currentAsset.value;
+      })
 
-    setUserBalance(stakedBalance);
-  }
+      setUserBalance(stakedBalance);
+    }
   }, [assets])
 
 
   return (
     <>
-      {state.display ? (
+      {displayFarmInfo ? (
         <BluePanel>
           <h1>{prettyBalance(userBalance * currentExchangeRate)}</h1>
           <span>Staked Balance</span>

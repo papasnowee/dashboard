@@ -1,4 +1,4 @@
-import React,{useContext} from "react";
+import React, { useContext } from "react";
 import HarvestContext from '../../../Context/HarvestContext';
 import styled, { ThemeProvider } from "styled-components";
 import { darkTheme, lightTheme, fonts } from "../../../styles/appStyles";
@@ -49,10 +49,10 @@ span {
 `;
 
 const FarmPrice = () => {
-  const {state,convertStandardNumber, currentExchangeRate} = useContext(HarvestContext)
+  const { state, convertStandardNumber, currentExchangeRate, displayFarmInfo } = useContext(HarvestContext)
   return (
     <ThemeProvider theme={state.theme === "dark" ? darkTheme : lightTheme}>
-      {state.display ? (
+      {displayFarmInfo ? (
         <BluePanel>
           <h1>{convertStandardNumber(state.farmPrice * currentExchangeRate)}</h1>
           <span>FARM price</span>

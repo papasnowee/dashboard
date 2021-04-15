@@ -1,9 +1,10 @@
 import React, { useState, useContext } from 'react';
 import styled from 'styled-components';
+import { ethers } from 'ethers';
+
 import { Row, Col } from 'styled-bootstrap-grid';
 import { motion } from 'framer-motion';
 import { fonts } from '../../styles/appStyles';
-import harvest from '../../lib/index';
 
 // COMPONENTS
 import MainContent from '../MainContent';
@@ -12,8 +13,6 @@ import Wallet from '../Wallet';
 
 // CONTEXT
 import HarvestContext from '../../Context/HarvestContext';
-
-const { ethers } = harvest;
 
 const CheckBalance = () => {
   const {

@@ -4,7 +4,7 @@ import MainContent from '../MainContent';
 import Button from '../Button';
 import HarvestContext from '../../Context/HarvestContext';
 
-export default function ModeSelectBoard({ state, setState, openModal }) {
+export default function ModeSelectBoard({ state, setState }) {
   const { isConnecting, setIsConnecting, getPools } = useContext(HarvestContext);
 
   const onGoDashboard = () => {
@@ -13,7 +13,7 @@ export default function ModeSelectBoard({ state, setState, openModal }) {
   };
 
   return isConnecting ? (
-    <MainContent state={state} setState={setState} openModal={openModal} />
+    <MainContent state={state} setState={setState} />
   ) : (
     <div className="mode-select-container">
       <Panel className="mode-select-user">

@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
-import styled, { ThemeProvider } from 'styled-components';
+import styled from 'styled-components';
 import HarvestContext from '../../Context/HarvestContext';
-import { darkTheme, lightTheme, fonts } from '../../styles/appStyles';
+import { fonts } from '../../styles/appStyles';
 import harvest from '../../lib';
 
 const { ethers } = harvest;
@@ -47,91 +47,93 @@ const Harvest = () => {
     setHarvesting(false);
   };
 
-  const pool = state.manager.pools.find(pool => {
-    return pool.address === '0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50';
-  });
+  // const pool = state.manager.pools.find(pool => {
+  //   return pool.address === '0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50';
+  // });
 
   const stake = async () => {
     // const allowance = await pool.lptoken.allowance(state.address, pool.address);
 
-    const amount =
-      state.minimumHarvestAmount > 0
-        ? ethers.utils.parseUnits(state.minimumHarvestAmount.toString(), 18)
-        : await pool.unstakedBalance(state.address);
+    // const amount =
+    //   state.minimumHarvestAmount > 0
+    //     ? ethers.utils.parseUnits(state.minimumHarvestAmount.toString(), 18)
+    //     : await pool.unstakedBalance(state.address);
 
-    await pool
-      .stake(amount)
-      .then(async res => {
-        setHarvestAndStakeMessage({
-          ...harvestAndStakeMessage,
-          first: 'Staking your FARM',
-          second: '',
-        });
-        await res.wait().then(() => {
-          setHarvesting(false);
-          setHarvestAndStakeMessage({
-            ...harvestAndStakeMessage,
-            first: `Success!`,
-            second: `Your FARM has been staked!`,
-          });
-          const timer = setTimeout(() => {
-            setHarvestAndStakeMessage({
-              ...harvestAndStakeMessage,
-              first: ``,
-              second: '',
-            });
-          }, 2500);
-          return () => clearTimeout(timer);
-        });
-      })
-      .catch(e => {
-        if (e.code !== 4001 || e.code !== -32603) {
-          setHarvesting(false);
-          setHarvestAndStakeMessage({
-            ...harvestAndStakeMessage,
-            first: ``,
-            second: '',
-          });
-          console.log(`You do not have enough to stake ${ethers.utils.formatEther(amount)} FARM`);
-        }
-      });
+    // await pool
+    //   .stake(amount)
+    //   .then(async res => {
+    //     setHarvestAndStakeMessage({
+    //       ...harvestAndStakeMessage,
+    //       first: 'Staking your FARM',
+    //       second: '',
+    //     });
+    //     await res.wait().then(() => {
+    //       setHarvesting(false);
+    //       setHarvestAndStakeMessage({
+    //         ...harvestAndStakeMessage,
+    //         first: `Success!`,
+    //         second: `Your FARM has been staked!`,
+    //       });
+    //       const timer = setTimeout(() => {
+    //         setHarvestAndStakeMessage({
+    //           ...harvestAndStakeMessage,
+    //           first: ``,
+    //           second: '',
+    //         });
+    //       }, 2500);
+    //       return () => clearTimeout(timer);
+    //     });
+    //   })
+    //   .catch(e => {
+    //     if (e.code !== 4001 || e.code !== -32603) {
+    //       setHarvesting(false);
+    //       setHarvestAndStakeMessage({
+    //         ...harvestAndStakeMessage,
+    //         first: ``,
+    //         second: '',
+    //       });
+    //       console.log(`You do not have enough to stake ${ethers.utils.formatEther(amount)} FARM`);
+    //     }
+    //   });
   };
 
   const harvestAllAndStake = async () => {
-    console.log('harvesting');
-    setHarvesting(true);
-    setHarvestAndStakeMessage({
-      ...harvestAndStakeMessage,
-      first: 'Harvesting your rewards and staking.',
-      second: 'This could take a while',
-    });
-    await state.manager
-      .getRewards(ethers.utils.parseUnits(state.minimumHarvestAmount, 18))
-      .then(async vals => {
-        let i = 0;
-        while (i < vals.length) {
-          await vals[i].getReward.wait();
-          i++;
-        }
-      })
-      .catch(err => {
-        console.log(err);
-      });
-    setState(prevState => ({ ...prevState, minimumHarvestAmount: '0' }));
+    // console.log('harvesting');
+    // setHarvesting(true);
+    // setHarvestAndStakeMessage({
+    //   ...harvestAndStakeMessage,
+    //   first: 'Harvesting your rewards and staking.',
+    //   second: 'This could take a while',
+    // });
+    // await state.manager
+    //   .getRewards(ethers.utils.parseUnits(state.minimumHarvestAmount, 18))
+    //   .then(async vals => {
+    //     let i = 0;
+    //     while (i < vals.length) {
+    //       await vals[i].getReward.wait();
+    //       i++;
+    //     }
+    //   })
+    //   .catch(err => {
+    //     console.log(err);
+    //   });
+    // setState(prevState => ({ ...prevState, minimumHarvestAmount: '0' }));
 
-    stake();
+    // stake();
   };
 
   return (
-    <ThemeProvider theme={state.theme === 'dark' ? darkTheme : lightTheme}>
+    <>
       <Panel>
         <div className="panel-text">
           <p>
             Harvest my pools with at least
             <input
               type="number"
-              onChange={event =>
-                setState(prevState => ({ ...prevState, minimumHarvestAmount: event.target.value }))
+              onChange={event => {
+                const value = event.target.value;
+                setState(prevState => ({ ...prevState, minimumHarvestAmount: value }))
+              }
               }
               placeholder="min"
               value={state.minimumHarvestAmount}
@@ -153,14 +155,16 @@ const Harvest = () => {
         </div>
 
         <ButtonContainer>
-          {isHarvesting ? (
+          {/* {isHarvesting ? //TODO fix ( */}
+          {true ? (
             <HarvestingButton>harvest</HarvestingButton>
           ) : (
             <button className="buttons" onClick={harvest} type="button">
               harvest
             </button>
           )}
-          {isHarvesting ? (
+          {/* {isHarvesting ? //TODO fix ( */}
+          {true ? (
             <HarvestingButton>harvest and stake</HarvestingButton>
           ) : (
             <button
@@ -173,7 +177,7 @@ const Harvest = () => {
           )}
         </ButtonContainer>
       </Panel>
-    </ThemeProvider>
+    </>
   );
 };
 

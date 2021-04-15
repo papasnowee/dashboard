@@ -1,10 +1,8 @@
 import React, { useContext, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
+import { ethers } from 'ethers';
 import HarvestContext from '../Context/HarvestContext';
 import { fonts } from '../styles/appStyles';
-import harvest from '../lib/index';
-
-const { ethers } = harvest;
 
 const WelcomeTextPanel = styled.div`
   width: 98%;
@@ -80,9 +78,8 @@ const WelcomeText = ({ disconnect, setAddress, setConnection, openModal }) => {
       const ethersProvider = new ethers.providers.Web3Provider(provider);
 
       const signer = ethersProvider.getSigner();
-      const manager = harvest.manager.PoolManager.allPastPools(signer || provider);
 
-      setConnection(provider, signer, manager);
+      setConnection(provider, signer);
 
       window.ethereum.on('accountsChanged', () => {
         disconnect();

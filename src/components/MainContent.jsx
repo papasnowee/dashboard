@@ -7,36 +7,32 @@ import AddTokens from './addTokens/AddTokens';
 import Wallet from './Wallet';
 import FarmingTable from './farmingTable/FarmingTable';
 import FarmInfo from './farmInfo/FarmInfo';
-import AssetTable from './assetTable/AssetTable';
 import HarvestContext from '../Context/HarvestContext';
 
-const MainContent = ({ setState, openModal }) => {
+const MainContent = ({ setState }) => {
   const { isCheckingBalance, state } = useContext(HarvestContext);
 
   return (
     <Main>
-      {isCheckingBalance ? (
-        ''
-      ) : (
+      {!isCheckingBalance && (
         <Row>
           <Col>
             <Wallet theme={state.theme} address={state.address} provider={state.provider} />
           </Col>
         </Row>
       )}
+
       <Row>
         <Col>
           <FarmInfo />
         </Col>
       </Row>
 
-      {isCheckingBalance ? (
-        ''
-      ) : (
+      {!isCheckingBalance && (
         <Row style={{ marginTop: '15px' }}>
           {/* Git hub pages would not recognize the margin from the bootstrap grid */}
           <Col lg="12">
-            <Harvest state={state} setState={setState} openModal={openModal} />
+            <Harvest state={state} setState={setState} />
           </Col>
         </Row>
       )}
@@ -46,9 +42,7 @@ const MainContent = ({ setState, openModal }) => {
         </Col>
       </Row>
 
-      {isCheckingBalance ? (
-        ''
-      ) : (
+      {!isCheckingBalance && (
         <Row style={{ marginTop: '15px' }}>
           {/* Git hub pages would not recognize the margin from the bootstrap grid */}
           <Col lg="12">
@@ -56,8 +50,6 @@ const MainContent = ({ setState, openModal }) => {
           </Col>
         </Row>
       )}
-
-      <AssetTable state={state} />
     </Main>
   );
 };

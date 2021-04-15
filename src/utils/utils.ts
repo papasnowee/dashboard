@@ -1,6 +1,4 @@
-import { IVault } from "../../types"
-
-const decimalPlace = 6;
+import { IVault } from "../types"
 
 /** Converts the balance into tokens and rounds to the sixth decimal place */
 export const makeBalancePrettier = (balance: number, decimals: IVault['decimals']) => {
