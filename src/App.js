@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from 'styled-components';
 import { Row, Col } from 'styled-bootstrap-grid';
 import Loadable from 'react-loadable';
@@ -12,9 +12,8 @@ import HarvestContext from './Context/HarvestContext';
 import { FTOKEN_ABI, REWARDS_ABI } from './lib/data/ABIs';
 import { darkTheme, lightTheme } from './styles/appStyles';
 import { makeBalancePrettier } from './utils';
-import { rewardDecimals, vaultsWithoutReward } from './constants';
-
-import API from './api';
+import { rewardDecimals, vaultsWithoutReward } from './constants/constants';
+import { API } from './api';
 // images
 import logo from './assets/newLogo.png';
 // styles
@@ -73,7 +72,7 @@ function App() {
 		second: '',
 	});
 
-	/**The wallet address that user check in read-mode */
+	/** The wallet address that user check in read-mode */
 	const [addressToCheck, setAddressToCheck] = useState('');
 	const [state, setState] = useState({
 		provider: undefined,
@@ -82,8 +81,6 @@ function App() {
 		address: '',
 		addressToCheck: '',
 		summaries: [],
-		// underlyings: [],
-		// usdValue: 0,
 		error: { message: null, type: null, display: false },
 		theme: window.localStorage.getItem('HarvestFinance:Theme'),
 		display: false,
@@ -92,24 +89,6 @@ function App() {
 		farmPrice: 0,
 		totalFarmEarned: 0,
 	});
-
-	const getPools = async () => {
-		const [APY, farmPrice] = await Promise.all([API.getAPY(), API.getFarmPrice()]);
-		setState(prevState => ({ ...prevState, apy: APY, farmPrice }));
-		setDisplayFarmInfo(true);
-	};
-
-	const refresh = useCallback(() => {
-		let address = '';
-
-		if (isCheckingBalance) {
-			address = state.addressToCheck;
-		} else if (isConnecting) {
-			address = state.address;
-		} else {
-			return;
-		}
-	}, [isCheckingBalance, isConnecting, state.address, state.addressToCheck]);
 
 	const memoizeExchangeRates = () => {
 		axios
@@ -123,8 +102,8 @@ function App() {
 	};
 
 	const getPersonalGasSaved = async (address, setGasInfo) => {
-		address &&
-			(await axios
+		if (address) {
+			await axios
 				.get(
 					`${process.env.REACT_APP_ETH_PARSER_URL}/total_saved_gas_fee_by_address?address=${address}`,
 				)
@@ -133,7 +112,8 @@ function App() {
 				})
 				.catch(err => {
 					console.log(err);
-				}));
+				});
+		}
 	};
 
 	useEffect(() => {
@@ -153,15 +133,11 @@ function App() {
 					'0x1571eD0bed4D987fe2b498DdBaE7DFA19519F651'.toLowerCase();
 
 				// a pool that has the same token as a vault
-				const pool = pools.find(pool => {
-					return vault.contract.address === pool.lpToken.address;
+				const pool = pools.find(i => {
+					return vault.contract.address === i.lpToken.address;
 				});
 
-				const vaultContract = new Contract(
-					vault.contract.address,
-					FTOKEN_ABI,
-					ethersProvider,
-				);
+				const vaultContract = new Contract(vault.contract.address, FTOKEN_ABI, ethersProvider);
 
 				if (pool) {
 					const poolAddress = pool.contract.address;
@@ -172,20 +148,18 @@ function App() {
 
 					// for iFARM
 					const getPricePerFullShare = async () => {
-						if (rewardIsFarm) {
-							return;
+						if (!rewardIsFarm) {
+							const iFARMContract = new Contract(
+								pool.rewardToken.address,
+								FTOKEN_ABI,
+								ethersProvider,
+							);
+
+							const price = await iFARMContract.getPricePerFullShare();
+							const intPrice = parseInt(price._hex, 16);
+							const prettyPrice = makeBalancePrettier(intPrice, rewardDecimals);
+							return prettyPrice;
 						}
-
-						const iFARMContract = new Contract(
-							pool.rewardToken.address,
-							FTOKEN_ABI,
-							ethersProvider,
-						);
-
-						const price = await iFARMContract.getPricePerFullShare();
-						const intPrice = parseInt(price._hex, 16);
-						const prettyPrice = makeBalancePrettier(intPrice, rewardDecimals);
-						return prettyPrice;
 					};
 
 					const getPricePerFullShareFToken = async () => {
@@ -229,14 +203,8 @@ function App() {
 					const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
 					const poolBalanceIntNumber = parseInt(poolBalance._hex, 16);
 
-					const prettyVaultBalance = makeBalancePrettier(
-						vaultBalanceIntNumber,
-						vault.decimals,
-					);
-					const prettyPoolBalance = makeBalancePrettier(
-						poolBalanceIntNumber,
-						vault.decimals,
-					);
+					const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
+					const prettyPoolBalance = makeBalancePrettier(poolBalanceIntNumber, vault.decimals);
 					const prettyRewardTokenBalance = makeBalancePrettier(reward, rewardDecimals);
 					const rewardTokenAreInFARM = rewardIsFarm
 						? prettyRewardTokenBalance
@@ -254,9 +222,7 @@ function App() {
 					};
 
 					// fTokens balance in underlying Tokens;
-					const underlyingBalance = (prettyPoolBalance * pricePerFullShareFToken).toFixed(
-						6,
-					);
+					const underlyingBalance = (prettyPoolBalance * pricePerFullShareFToken).toFixed(6);
 
 					return {
 						name: vault.contract.name,
@@ -274,10 +240,7 @@ function App() {
 
 				const vaultBalance = await vaultContract.balanceOf(walletAddress);
 				const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
-				const prettyVaultBalance = makeBalancePrettier(
-					vaultBalanceIntNumber,
-					vault.decimals,
-				);
+				const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
 
 				if (isIFarm) {
 					const [
@@ -307,7 +270,7 @@ function App() {
 						farmToClaim: 0,
 						stakedBalance: prettyVaultBalance,
 						percentOfPool: `${percentOfPool}%`,
-						value: value,
+						value,
 						unstakedBalance: 0,
 						address: vault.contract.address,
 						underlyingBalance: 0,
@@ -326,8 +289,8 @@ function App() {
 					underlyingBalance: 0,
 				};
 			});
-			const assets = await Promise.all(assetData);
-			const nonZeroAssets = assets.filter(asset => {
+			const assetsData = await Promise.all(assetData);
+			const nonZeroAssets = assetsData.filter(asset => {
 				return (
 					asset.farmToclaim ||
 					asset.stakedBalance ||
@@ -340,10 +303,11 @@ function App() {
 			console.log('1111 nonZeroAssets', nonZeroAssets);
 
 			setState(prevState => ({ ...prevState, display: true }));
+
 			setAssets(nonZeroAssets);
 		};
 
-		if (state.provider && (addressToCheck || state.address)) {
+		if (state.provider && (addressToCheck || state.address) && currentExchangeRate) {
 			getAssets();
 		}
 	}, [state.provider, isCheckingBalance, addressToCheck, state.address, currentExchangeRate]);
@@ -359,27 +323,15 @@ function App() {
 	}, [addressToCheck]);
 
 	useEffect(() => {
-		const timer = setTimeout(() => {
-			refresh();
-		}, 20000);
-		return () => clearTimeout(timer);
-	});
-
-	useEffect(() => {
-		if (isConnecting) {
-			refresh();
-		}
-	}, [isConnecting, refresh]);
-
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			getPools();
-		}, 20000);
-		return () => clearTimeout(timer);
-	});
-
-	useEffect(() => {
+		const getPools = async () => {
+			const [APY, farmPrice] = await Promise.all([API.getAPY(), API.getFarmPrice()]);
+			setState(prevState => ({ ...prevState, apy: APY, farmPrice }));
+			setDisplayFarmInfo(true);
+		};
 		getPools();
+	}, []);
+
+	useEffect(() => {
 		memoizeExchangeRates();
 		// eslint-disable-next-line
 	}, []);
@@ -389,20 +341,6 @@ function App() {
 		}, 600000);
 		return () => clearTimeout(timer);
 	});
-
-	useEffect(() => {
-		if (state.address !== '') {
-			refresh();
-		}
-		// eslint-disable-next-line
-	}, [state.address]);
-
-	useEffect(() => {
-		if (state.addressToCheck !== '') {
-			refresh();
-		}
-		// eslint-disable-next-line
-	}, [state.addressToCheck]);
 
 	const disconnect = () => {
 		setState(prevState => ({
@@ -476,8 +414,6 @@ function App() {
 	const setCheckingBalanceStatus = checking => {
 		setState(prevState => ({
 			...prevState,
-			apy: 0,
-			farmPrice: 0,
 			totalFarmEarned: 0,
 		}));
 		setCheckingBalance(checking);
@@ -504,7 +440,6 @@ function App() {
 				setCheckingBalance: setCheckingBalanceStatus,
 				setConnection,
 				disconnect,
-				refresh,
 				harvestAndStakeMessage,
 				setHarvestAndStakeMessage,
 				exchangeRates,
@@ -522,7 +457,6 @@ function App() {
 				web3Modal,
 				addressToCheck,
 				setAddressToCheck,
-				getPools,
 			}}
 		>
 			<ThemeProvider theme={state.theme === 'dark' ? darkTheme : lightTheme}>
@@ -569,10 +503,7 @@ function App() {
 											<HarvestAndStakeMessage />
 
 											{state.provider ? (
-												<ModeSelectBoard
-													state={state}
-													setState={setState}
-												/>
+												<ModeSelectBoard state={state} setState={setState} />
 											) : (
 												<Row>
 													<Col>

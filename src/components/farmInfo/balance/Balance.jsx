@@ -41,32 +41,33 @@ const BluePanel = styled.div`
 `;
 
 const Balance = () => {
-  const { state, currentExchangeRate, prettyBalance, assets, displayFarmInfo } = useContext(HarvestContext);
-  const [userBalance, setUserBalance] = useState(0);
+	const { state, currentExchangeRate, prettyBalance, assets, displayFarmInfo } = useContext(
+		HarvestContext,
+	);
+	const [userBalance, setUserBalance] = useState(0);
 
-  useEffect(() => {
-    if (assets.length) {
-      const stakedBalance = assets.reduce((acc, currentAsset) => {
-        return acc + currentAsset.value;
-      })
+	useEffect(() => {
+		if (assets.length) {
+			const stakedBalance = assets.reduce((acc, currentAsset) => {
+				return acc + currentAsset.value;
+			});
 
-      setUserBalance(stakedBalance);
-    }
-  }, [assets])
+			setUserBalance(stakedBalance);
+		}
+	}, [assets]);
 
-
-  return (
-    <>
-      {displayFarmInfo ? (
-        <BluePanel>
-          <h1>{prettyBalance(userBalance * currentExchangeRate)}</h1>
-          <span>Staked Balance</span>
-        </BluePanel>
-      ) : (
-        <BalanceSkeleton state={state} />
-      )}
-    </>
-  );
+	return (
+		<>
+			{displayFarmInfo ? (
+				<BluePanel>
+					<h1>{prettyBalance(userBalance * currentExchangeRate)}</h1>
+					<span>Staked Balance</span>
+				</BluePanel>
+			) : (
+				<BalanceSkeleton state={state} />
+			)}
+		</>
+	);
 };
 
 export default Balance;

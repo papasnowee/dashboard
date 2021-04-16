@@ -53,8 +53,7 @@ export function prettyPosition(sum) {
 			const sharePrice = formatUnits(pricePerFullShare, decimals);
 			const underlyingPricedifference =
 				sharePrice * formattedUnderlyingBalance - formattedUnderlyingBalance;
-			const usdValuePerShare =
-				formatUnits(usdValueOf.toNumber(), 6) / formattedUnderlyingBalance;
+			const usdValuePerShare = formatUnits(usdValueOf.toNumber(), 6) / formattedUnderlyingBalance;
 
 			return underlyingPricedifference * usdValuePerShare;
 		}
