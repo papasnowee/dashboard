@@ -8,6 +8,12 @@ interface IContract {
 	network: null;
 }
 
+interface IRewardToken extends IContract {
+	address:
+		| '0x1571ed0bed4d987fe2b498ddbae7dfa19519f651'
+		| '0xa0246c9032bc3a600820415ae600c6388619a14d';
+}
+
 export interface IPool {
 	id: number;
 	contract: IContract;
@@ -15,7 +21,7 @@ export interface IPool {
 	governance: IContract;
 	owner: IContract;
 	lpToken: IContract;
-	rewardToken: IContract;
+	rewardToken: IRewardToken;
 }
 
 export interface IVault {

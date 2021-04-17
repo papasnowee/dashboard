@@ -1,15 +1,8 @@
 import { Contract, ethers } from 'ethers';
 import { API } from '../api';
-import { rewardDecimals, vaultsWithoutReward } from '../constants/constants';
+import { farmDecimals, vaultsWithoutReward } from '../constants/constants';
 import { FTOKEN_ABI, REWARDS_ABI } from '../lib/data/ABIs';
 import { IAssetsInfo } from '../types';
-
-/** Converts the balance into tokens and rounds to the sixth decimal place */
-export const makeBalancePrettier = (balance: number, decimals: number) => {
-	// balance calculated in tokens
-	const balancePerToken = balance / 10 ** decimals;
-	return Number(balancePerToken);
-};
 
 const currencyFormatter = (currency: string) =>
 	new Intl.NumberFormat('en-US', {
@@ -50,27 +43,9 @@ export const getAssets = async (
 		if (pool && pool.rewardToken.address === '0xa0246c9032bc3a600820415ae600c6388619a14d') {
 			const poolAddress = pool.contract.address;
 			const poolContract = new Contract(poolAddress, REWARDS_ABI, ethersProvider);
+			const iFARMContract = new Contract(pool.rewardToken.address, FTOKEN_ABI, ethersProvider);
 			const rewardIsFarm =
 				pool.rewardToken.address === '0xa0246c9032bc3a600820415ae600c6388619a14d';
-
-			// for iFARM
-			const getPricePerFullShare = async () => {
-				const iFARMContract = new Contract(pool.rewardToken.address, FTOKEN_ABI, ethersProvider);
-
-				const price = await iFARMContract.getPricePerFullShare();
-				// .catch(e => console.log('22222 err: ', pool.rewardToken.address)); bug is here! if rewardToken !== FARM (=== iFARM?)
-				const intPrice = parseInt(price._hex, 16);
-				const prettyPrice = makeBalancePrettier(intPrice, rewardDecimals);
-
-				return prettyPrice;
-			};
-
-			const getPricePerFullShareFToken = async () => {
-				const price = await vaultContract.getPricePerFullShare();
-				const intPrice = parseInt(price._hex, 16);
-				const prettyPrice = makeBalancePrettier(intPrice, vault.decimals);
-				return prettyPrice;
-			};
 
 			/**
 			 * vaultBalance - balance of a wallet in the vault (are in fToken)
@@ -102,46 +77,47 @@ export const getAssets = async (
 				API.getTokenPrice(pool.rewardToken.address),
 				poolContract.earned(walletAddress),
 				poolContract.totalSupply(),
-				// getPricePerFullShare(),
-				getPricePerFullShareFToken(),
+				// iFARMContract.getPricePerFullShare();,
+				vaultContract.getPricePerFullShare(),
 			]);
 
-			const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
-			const poolBalanceIntNumber = parseInt(poolBalance._hex, 16);
+			const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16) / 10 ** vault.decimals;
+			const poolBalanceIntNumber = parseInt(poolBalance._hex, 16) / 10 ** vault.decimals;
+			const intPricePerFullShareFToken =
+				parseInt(pricePerFullShareFToken._hex, 16) / 10 ** farmDecimals;
+			// const intPricePerFullShare = parseInt(pricePerFullShare._hex, 16) / 10 ** farmDecimals;
 
-			const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
-			const prettyPoolBalance = makeBalancePrettier(poolBalanceIntNumber, vault.decimals);
-			const prettyRewardTokenBalance = makeBalancePrettier(reward, rewardDecimals);
+			const intRewardTokenBalance = parseInt(reward._hex, 16) / 10 ** farmDecimals;
+
 			// const rewardTokenAreInFARM = rewardIsFarm
-			// 	? prettyRewardTokenBalance
-			// 	: prettyRewardTokenBalance * pricePerFullShare;
-			const rewardTokenAreInFARM = prettyRewardTokenBalance;
+			// 	? rewardTokenBalance
+			// 	: rewardTokenBalance * intPricePerFullShare;
+			const rewardTokenAreInFARM = intRewardTokenBalance;
 
 			const percentOfPool = `${((poolBalance * 100) / poolTotalSupply).toFixed(6)}%`;
 
 			/** All account assets that contains in the pool are in USD */
 			const calcValue = () => {
-				// if (vault.contract.name === 'UNI_ETH_DAI')
-				// {
-				// 	debugger
+				// if (vault.contract.name === 'WBTC') {
+				// 	debugger;
 				// }
 				return (
-					underlyingPrice * prettyPoolBalance * pricePerFullShareFToken +
+					underlyingPrice * poolBalanceIntNumber * intPricePerFullShareFToken +
 					rewardTokenPrice * rewardTokenAreInFARM
 				);
 			};
 
 			// fTokens balance in underlying Tokens;
-			const underlyingBalance = prettyPoolBalance * pricePerFullShareFToken;
+			const underlyingBalance = poolBalanceIntNumber * intPricePerFullShareFToken;
 
 			return {
 				name: vault.contract.name,
 				earnFarm: true,
 				farmToClaim: rewardTokenAreInFARM,
-				stakedBalance: prettyPoolBalance,
+				stakedBalance: poolBalanceIntNumber,
 				percentOfPool,
 				value: calcValue(),
-				unstakedBalance: prettyVaultBalance,
+				unstakedBalance: vaultBalanceIntNumber,
 				address: vault.contract.address,
 				rewardIsFarm,
 				underlyingBalance,
@@ -159,8 +135,7 @@ export const getAssets = async (
 				vaultContract.totalSupply(),
 				vaultContract.underlyingBalanceWithInvestmentForHolder(walletAddress),
 			]);
-			const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
-			const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
+			const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16) / 10 ** vault.decimals;
 
 			const intUnderlyingBalanceWithInvestmentForHolder = parseInt(
 				underlyingBalanceWithInvestmentForHolder._hex,
@@ -174,7 +149,7 @@ export const getAssets = async (
 				name: vault.contract.name,
 				earnFarm: true,
 				farmToClaim: 0,
-				stakedBalance: prettyVaultBalance,
+				stakedBalance: vaultBalanceIntNumber,
 				percentOfPool: `${percentOfPool}%`,
 				value,
 				unstakedBalance: 0,
@@ -183,8 +158,7 @@ export const getAssets = async (
 			};
 		}
 		const vaultBalance = await vaultContract.balanceOf(walletAddress);
-		const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
-		const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
+		const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16) / 10 ** vault.decimals;
 
 		return {
 			name: vault.contract.name,
@@ -193,7 +167,7 @@ export const getAssets = async (
 			stakedBalance: 0,
 			percentOfPool: '0.00000%',
 			value: 0,
-			unstakedBalance: prettyVaultBalance,
+			unstakedBalance: vaultBalanceIntNumber,
 			address: vault.contract.address,
 			underlyingBalance: 0,
 		};

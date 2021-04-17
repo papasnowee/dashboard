@@ -2,4 +2,4 @@
 export const vaultsWithoutReward = new Set<string>([]);
 
 // FARM decimals
-export const rewardDecimals = 18;
+export const farmDecimals = 18;
