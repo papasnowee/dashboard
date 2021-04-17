@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 import { fonts } from '../../styles/appStyles';
@@ -11,7 +11,6 @@ import {
 	PanelTab,
 	Tabs,
 } from './FarmingTableStyles';
-import HarvestContext from '../../Context/HarvestContext';
 import FarmTableSkeleton from './FarmTableSkeleton';
 
 // const { utils } = harvest;
@@ -43,8 +42,8 @@ const columns = [
 	},
 ];
 
-const FarmingTable = () => {
-	const { state, assets } = useContext(HarvestContext);
+const FarmingTable = ({ display, assets }) => {
+	
 
 	// const [sortedSummary, setSortedSummary] = useState([]);
 	// const [sortDirection, setSortDirection] = useState(1);
@@ -104,7 +103,7 @@ const FarmingTable = () => {
 
 	return (
 		<>
-			{state.display && (
+			{display && (
 				<Tabs>
 					<PanelTabContainerLeft>
 						<PanelTab>
@@ -113,7 +112,7 @@ const FarmingTable = () => {
 					</PanelTabContainerLeft>
 				</Tabs>
 			)}
-			{state.display ? (
+			{display ? (
 				<TableContainer>
 					{assets.length === 0 ? (
 						<NoAssetTable>
@@ -130,7 +129,7 @@ const FarmingTable = () => {
 					) : (
 						<MainTableInner>
 							<MainTableHeader>
-								{columns.map((col, i) => {
+								{columns.map(col => {
 									return (
 										<div
 											className={`${col.name} table-header`}
@@ -171,7 +170,7 @@ const FarmingTable = () => {
 					)}
 				</TableContainer>
 			) : (
-				<FarmTableSkeleton state={state} />
+				<FarmTableSkeleton />
 			)}
 		</>
 	);

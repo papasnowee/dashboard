@@ -23,8 +23,8 @@ const Panel = styled.div`
 		overflow-x: scroll;
 		height: 16rem;
 		scrollbar-color: ${({ theme }) => {
-    return `${theme.style.scrollBarColor} ${theme.style.lightBackground}`;
-  }};
+			return `${theme.style.scrollBarColor} ${theme.style.lightBackground}`;
+		}};
 		scrollbar-width: thin;
 
 		::-webkit-scrollbar {
@@ -107,99 +107,98 @@ const StyledToken = styled.div`
 `;
 
 const AddTokens = props => {
-  const { state } = props;
-  const { tokenAddedMessage, setTokenAddedMessage } = useContext(HarvestContext);
+	const { state } = props;
+	const { tokenAddedMessage, setTokenAddedMessage } = useContext(HarvestContext);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTokenAddedMessage('');
-    }, 1500);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setTokenAddedMessage('');
+		}, 1500);
+		return () => clearTimeout(timer);
+		// eslint-disable-next-line
   }, [tokenAddedMessage]);
 
-  const checkForToken = async t => {
-    // The minimum ABI to get ERC20 Token balance
-    const minABI = [
-      // balanceOf
-      {
-        constant: true,
-        inputs: [{ name: '_owner', type: 'address' }],
-        name: 'balanceOf',
-        outputs: [{ name: 'balance', type: 'uint256' }],
-        type: 'function',
-      },
-      // decimals
-      {
-        constant: true,
-        inputs: [],
-        name: 'decimals',
-        outputs: [{ name: '', type: 'uint8' }],
-        type: 'function',
-      },
-    ];
-    // Get ERC20 Token contract instance
-    const contract = new Contract(t.address, minABI, providers.getDefaultProvider());
-    // calculate a balance
-    const balance = await contract.balanceOf(props.state.address);
-    return parseInt(balance, 16);
-  };
+	const checkForToken = async t => {
+		// The minimum ABI to get ERC20 Token balance
+		const minABI = [
+			// balanceOf
+			{
+				constant: true,
+				inputs: [{ name: '_owner', type: 'address' }],
+				name: 'balanceOf',
+				outputs: [{ name: 'balance', type: 'uint256' }],
+				type: 'function',
+			},
+			// decimals
+			{
+				constant: true,
+				inputs: [],
+				name: 'decimals',
+				outputs: [{ name: '', type: 'uint8' }],
+				type: 'function',
+			},
+		];
+		// Get ERC20 Token contract instance
+		const contract = new Contract(t.address, minABI, providers.getDefaultProvider());
+		// calculate a balance
+		const balance = await contract.balanceOf(props.state.address);
+		return parseInt(balance, 16);
+	};
 
-  const addTokenToWallet = t => {
-    setTokenAddedMessage('');
+	const addTokenToWallet = t => {
+		setTokenAddedMessage('');
 
-    window.ethereum
-      .request({
-        method: 'metamask_watchAsset',
-        params: {
-          type: 'ERC20',
-          options: {
-            address: t.address,
-            symbol: t.symbol,
-            decimals: t.decimals,
-            image: t.tokenImage,
-          },
-        },
-        // id: Math.round(Math.random() * 100000),
-      })
-      .then(async response => {
-        // console.log(await checkForToken(t))
-        if ((await checkForToken(t)) > 0 && response) {
-          setTokenAddedMessage(`${t.name} is already in your wallet.`);
-        } else if (response) {
-          setTokenAddedMessage(`${t.name} was added to your wallet.`);
-        } else {
-          setTokenAddedMessage(`${t.name} was not added to your wallet.`);
-        }
-      })
-      .catch(console.error);
-  };
+		window.ethereum
+			.request({
+				method: 'metamask_watchAsset',
+				params: {
+					type: 'ERC20',
+					options: {
+						address: t.address,
+						symbol: t.symbol,
+						decimals: t.decimals,
+						image: t.tokenImage,
+					},
+				},
+				// id: Math.round(Math.random() * 100000),
+			})
+			.then(async response => {
+				if ((await checkForToken(t)) > 0 && response) {
+					setTokenAddedMessage(`${t.name} is already in your wallet.`);
+				} else if (response) {
+					setTokenAddedMessage(`${t.name} was added to your wallet.`);
+				} else {
+					setTokenAddedMessage(`${t.name} was not added to your wallet.`);
+				}
+			})
+			.catch(console.error);
+	};
 
-  return (
-    <ThemeProvider theme={state.theme === 'dark' ? darkTheme : lightTheme}>
-      <Panel>
-        <h1>Add assets to wallet</h1>
-        <div className="inner">
-          <div className="token-container first">
-            {tokens.map(t => (
-              <StyledToken onClick={() => addTokenToWallet(t)} key={t.name} {...t}>
-                <img alt={t.name} src={t.image} />
-                <span>{t.name}</span>
-              </StyledToken>
-            ))}
-          </div>
-          <div className="token-container">
-            {tokens2.map(t => (
-              <StyledToken onClick={() => addTokenToWallet(t)} key={t.name} {...t}>
-                <img alt={t.name} src={t.image} />
-                <span>{t.name}</span>
-              </StyledToken>
-            ))}
-          </div>
-        </div>
-      </Panel>
-    </ThemeProvider>
-  );
+	return (
+		<ThemeProvider theme={state.theme === 'dark' ? darkTheme : lightTheme}>
+			<Panel>
+				<h1>Add assets to wallet</h1>
+				<div className="inner">
+					<div className="token-container first">
+						{tokens.map(t => (
+							<StyledToken onClick={() => addTokenToWallet(t)} key={t.name} {...t}>
+								<img alt={t.name} src={t.image} />
+								<span>{t.name}</span>
+							</StyledToken>
+						))}
+					</div>
+					<div className="token-container">
+						{tokens2.map(t => (
+							<StyledToken onClick={() => addTokenToWallet(t)} key={t.name} {...t}>
+								<img alt={t.name} src={t.image} />
+								<span>{t.name}</span>
+							</StyledToken>
+						))}
+					</div>
+				</div>
+			</Panel>
+		</ThemeProvider>
+	);
 };
 
 export default AddTokens;

@@ -9,49 +9,73 @@ import FarmingTable from './farmingTable/FarmingTable';
 import FarmInfo from './farmInfo/FarmInfo';
 import HarvestContext from '../Context/HarvestContext';
 
+// TODO split into two pages: user page and check balance page
 const MainContent = ({ setState }) => {
-  const { isCheckingBalance, state } = useContext(HarvestContext);
+	const {
+		isCheckingBalance,
+		state,
+		userAssets,
+		assetsToCheck,
+		userWalletAddress,
+		setUserWalletAddress,
+		showUserAssets,
+		showAssetsToCheck,
+		disconnect,
+	} = useContext(HarvestContext);
 
-  return (
-    <Main>
-      {!isCheckingBalance && (
-        <Row>
-          <Col>
-            <Wallet theme={state.theme} address={state.address} provider={state.provider} />
-          </Col>
-        </Row>
-      )}
+	const assets = isCheckingBalance ? assetsToCheck : userAssets;
+	return (
+		<Main>
+			{!isCheckingBalance && (
+				<Row>
+					<Col>
+						<Wallet
+							buttonText="Disconnect"
+							address={userWalletAddress}
+							provider={state.provider}
+							setAddress={setUserWalletAddress}
+							disconnect={disconnect}
+						/>
+					</Col>
+				</Row>
+			)}
 
-      <Row>
-        <Col>
-          <FarmInfo />
-        </Col>
-      </Row>
+			<Row>
+				<Col>
+					<FarmInfo assets={assets} />
+				</Col>
+			</Row>
 
-      {!isCheckingBalance && (
-        <Row style={{ marginTop: '15px' }}>
-          {/* Git hub pages would not recognize the margin from the bootstrap grid */}
-          <Col lg="12">
-            <Harvest state={state} setState={setState} />
-          </Col>
-        </Row>
-      )}
-      <Row>
-        <Col>
-          <FarmingTable />
-        </Col>
-      </Row>
+			{!isCheckingBalance && (
+				<Row style={{ marginTop: '15px' }}>
+					{/* Git hub pages would not recognize the margin from the bootstrap grid */}
+					<Col lg="12">
+						<Harvest state={state} setState={setState} />
+					</Col>
+				</Row>
+			)}
+			{isCheckingBalance ? (
+				<Row>
+					<Col>
+						<FarmingTable display={showAssetsToCheck} assets={assets} />
+					</Col>
+				</Row>
+			) : (
+				<Col>
+					<FarmingTable display={showUserAssets} assets={assets} />
+				</Col>
+			)}
 
-      {!isCheckingBalance && (
-        <Row style={{ marginTop: '15px' }}>
-          {/* Git hub pages would not recognize the margin from the bootstrap grid */}
-          <Col lg="12">
-            <AddTokens state={state} />
-          </Col>
-        </Row>
-      )}
-    </Main>
-  );
+			{!isCheckingBalance && (
+				<Row style={{ marginTop: '15px' }}>
+					{/* Git hub pages would not recognize the margin from the bootstrap grid */}
+					<Col lg="12">
+						<AddTokens state={state} />
+					</Col>
+				</Row>
+			)}
+		</Main>
+	);
 };
 
 export default MainContent;

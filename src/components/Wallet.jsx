@@ -104,23 +104,8 @@ const WalletTab = styled.div`
 	font-family: ${fonts.headerFont};
 	font-size: 2rem;
 `;
-const Wallet = ({ address, provider }) => {
-	const {
-		isCheckingBalance,
-		addressToCheck,
-		disconnect,
-		setRadio,
-		setCheckingBalance,
-		setAddressToCheck,
-	} = useContext(HarvestContext);
-
-	const clear = () => {
-		setRadio(false);
-		setCheckingBalance(false);
-		setAddressToCheck('');
-	};
-
-	const currentAddress = isCheckingBalance ? addressToCheck : address;
+const Wallet = ({ address, provider, setAddress, disconnect, buttonText }) => {
+	const { setRadio, setCheckingBalance, setShowAssetsToCheck } = useContext(HarvestContext);
 
 	const renderConnectStatus = () => {
 		return (
@@ -129,27 +114,17 @@ const Wallet = ({ address, provider }) => {
 					<a
 						target="_blank"
 						rel="noopener noreferrer"
-						href={currentAddress ? `https://etherscan.io/address/${currentAddress}` : '#'}
+						href={`https://etherscan.io/address/${address}`}
 					>
-						{prettyEthAddress(currentAddress) || ''}
+						{prettyEthAddress(address) || ''}
 					</a>
 				</span>
 
-				{!isCheckingBalance && (
-					<div className="button-div">
-						<button onClick={disconnect} className="clear button" type="button">
-							Disconnect
-						</button>
-					</div>
-				)}
-
-				{isCheckingBalance && (
-					<div className="button-div">
-						<button onClick={clear} className="clear button" type="button">
-							Clear
-						</button>
-					</div>
-				)}
+				<div className="button-div">
+					<button onClick={disconnect} className="clear button" type="button">
+						{buttonText}
+					</button>
+				</div>
 			</span>
 		);
 	};

@@ -24,9 +24,21 @@ export interface IVault {
 	updatedBlock: number;
 	governance: IContract;
 	strategy: IContract;
-	underlyinger: IContract;
+	underlying: IContract;
 	name: string;
 	symbol: string;
 	decimals: number;
 	underlyingUnit: number;
+}
+
+export interface IAssetsInfo {
+	name: string;
+	earnFarm: number;
+	farmToClaim: number;
+	stakedBalance: number;
+	percentOfPool: number;
+	value: number;
+	unstakedBalance: number;
+	address: string;
+	underlyingBalancering: number;
 }

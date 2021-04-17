@@ -14,17 +14,23 @@ import Wallet from '../Wallet';
 // CONTEXT
 import HarvestContext from '../../Context/HarvestContext';
 
+import { getAssets } from '../../utils/utils';
+
 const CheckBalance = () => {
 	const {
 		state,
-		setState,
 		isCheckingBalance,
 		setCheckingBalance,
-		addressToCheck,
-		setAddressToCheck,
+		setWalletAddressToCheck,
+		walletAddressToCheck,
+		setAssetsToCheck,
+		setShowAssetsToCheck,
+		setRadio,
 	} = useContext(HarvestContext);
 
 	const [validationMessage, setValidationMessage] = useState('');
+
+	const [addressFromChangeEvent, setAddressFromChangeEvent] = useState('');
 
 	const validateAddress = address => {
 		try {
@@ -36,22 +42,27 @@ const CheckBalance = () => {
 	};
 
 	const changeHandler = e => {
-		setAddressToCheck(e.target.value);
+		setAddressFromChangeEvent(e.target.value);
 	};
 
-	const setCheck = () => {
-		if (addressToCheck && validateAddress(addressToCheck)) {
+	const setCheck = async () => {
+		if (addressFromChangeEvent && validateAddress(addressFromChangeEvent)) {
 			setCheckingBalance(true);
-			setState(prevState => ({ ...prevState, addressToCheck }));
+			setWalletAddressToCheck(addressFromChangeEvent);
+			const assetsToCheck = await getAssets(addressFromChangeEvent, state.provider);
+			setAssetsToCheck(assetsToCheck);
+			setShowAssetsToCheck(true);
+
 		} else {
-			setAddressToCheck('');
-			setState(prevState => ({ ...prevState, addressToCheck: '' }));
 			setValidationMessage('You must enter a valid address');
-			const timer = setTimeout(() => {
-				setValidationMessage('');
-			}, 2500);
-			return () => clearTimeout(timer);
 		}
+	};
+	const disconnect = () => {
+		setRadio(false);
+		setCheckingBalance(false);
+		setShowAssetsToCheck(false);
+		setAssetsToCheck([]);
+		setWalletAddressToCheck('');
 	};
 
 	return (
@@ -74,7 +85,13 @@ const CheckBalance = () => {
 				{isCheckingBalance ? (
 					<Row>
 						<Col>
-							<Wallet theme={state.theme} address={addressToCheck} provider={state.provider} />
+							<Wallet
+								buttonText="Clear"
+								address={walletAddressToCheck}
+								provider={state.provider}
+								setAddress={setWalletAddressToCheck}
+								disconnect={disconnect}
+							/>
 						</Col>
 					</Row>
 				) : null}
@@ -86,7 +103,7 @@ const CheckBalance = () => {
 						<div className="address-input">
 							<input
 								type="text"
-								value={addressToCheck}
+								value={addressFromChangeEvent}
 								placeholder="Enter address"
 								onChange={changeHandler}
 							/>
@@ -102,9 +119,7 @@ const CheckBalance = () => {
 						Check Balance
 					</button>
 				)}
-				{isCheckingBalance ? (
-					<MainContent setAddressToCheck={setAddressToCheck} state={state} />
-				) : null}
+				{isCheckingBalance ? <MainContent /> : null}
 			</Panel>
 		</>
 	);
