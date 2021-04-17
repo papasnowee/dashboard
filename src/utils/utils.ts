@@ -2,6 +2,7 @@ import { Contract, ethers } from 'ethers';
 import { API } from '../api';
 import { rewardDecimals, vaultsWithoutReward } from '../constants/constants';
 import { FTOKEN_ABI, REWARDS_ABI } from '../lib/data/ABIs';
+import { IAssetsInfo } from '../types';
 
 /** Converts the balance into tokens and rounds to the sixth decimal place */
 export const makeBalancePrettier = (balance: number, decimals: number) => {
@@ -17,7 +18,7 @@ const currencyFormatter = (currency: string) =>
 	});
 
 export const prettyBalance = (balance: number, currency: string) => {
-	return currencyFormatter(currency).format(balance / 1000000);
+	return currencyFormatter(currency).format(balance);
 };
 
 export const convertStandardNumber = (num: number, currency: string) => {
@@ -27,13 +28,13 @@ export const convertStandardNumber = (num: number, currency: string) => {
 export const getAssets = async (
 	walletAddress: string,
 	provider: ethers.providers.ExternalProvider | ethers.providers.JsonRpcFetchFunc,
-) => {
+): Promise<IAssetsInfo[]> => {
 	const ethersProvider = new ethers.providers.Web3Provider(provider);
 
 	// get all pools and vaults
 	const [pools, vaults] = await Promise.all([API.getPools(), API.getVaults()]);
 	// get all data for the table
-	const assetData = vaults.map(async vault => {
+	const assetsData = vaults.map(async vault => {
 		// IFarm vault?
 		const isIFarm =
 			vault.contract.address.toLowerCase() ===
@@ -55,9 +56,9 @@ export const getAssets = async (
 			// for iFARM
 			const getPricePerFullShare = async () => {
 				const iFARMContract = new Contract(pool.rewardToken.address, FTOKEN_ABI, ethersProvider);
-				
-				const price = await iFARMContract.getPricePerFullShare()
-					// .catch(e => console.log('22222 err: ', pool.rewardToken.address)); bug is here! if rewardToken !== FARM (=== iFARM?)
+
+				const price = await iFARMContract.getPricePerFullShare();
+				// .catch(e => console.log('22222 err: ', pool.rewardToken.address)); bug is here! if rewardToken !== FARM (=== iFARM?)
 				const intPrice = parseInt(price._hex, 16);
 				const prettyPrice = makeBalancePrettier(intPrice, rewardDecimals);
 
@@ -65,7 +66,6 @@ export const getAssets = async (
 			};
 
 			const getPricePerFullShareFToken = async () => {
-				
 				const price = await vaultContract.getPricePerFullShare();
 				const intPrice = parseInt(price._hex, 16);
 				const prettyPrice = makeBalancePrettier(intPrice, vault.decimals);
@@ -81,8 +81,8 @@ export const getAssets = async (
 			 * poolTotalSupply - the total number of tokens in the pool of all participants
 			 * getPricePerFullShare = iFARMPrice / (FARMPRice * 10 ** rewardDecimals)
 			 */
-			 
-			//TODO fix FARM-price must be got 1 time
+
+			// TODO fix FARM-price must be got 1 time
 			// const tokenPrice2 = await getPricePerFullShare();
 			// console.log('11111 token price2', tokenPrice2, vault.underlying.address);
 
@@ -115,12 +115,16 @@ export const getAssets = async (
 			// const rewardTokenAreInFARM = rewardIsFarm
 			// 	? prettyRewardTokenBalance
 			// 	: prettyRewardTokenBalance * pricePerFullShare;
-			const rewardTokenAreInFARM = prettyRewardTokenBalance 
+			const rewardTokenAreInFARM = prettyRewardTokenBalance;
 
-			const percentOfPool = `${((poolBalance * 100) / poolTotalSupply).toFixed(3)}%`;
+			const percentOfPool = `${((poolBalance * 100) / poolTotalSupply).toFixed(6)}%`;
 
 			/** All account assets that contains in the pool are in USD */
 			const calcValue = () => {
+				// if (vault.contract.name === 'UNI_ETH_DAI')
+				// {
+				// 	debugger
+				// }
 				return (
 					underlyingPrice * prettyPoolBalance * pricePerFullShareFToken +
 					rewardTokenPrice * rewardTokenAreInFARM
@@ -132,7 +136,7 @@ export const getAssets = async (
 
 			return {
 				name: vault.contract.name,
-				earnFarm: !vaultsWithoutReward.has(poolAddress),
+				earnFarm: true,
 				farmToClaim: rewardTokenAreInFARM,
 				stakedBalance: prettyPoolBalance,
 				percentOfPool,
@@ -143,16 +147,20 @@ export const getAssets = async (
 				underlyingBalance,
 			};
 		}
-		const vaultBalance = await vaultContract.balanceOf(walletAddress);
-		const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
-		const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
-
 		if (isIFarm) {
-			const [farmPrice, totalSupply, underlyingBalanceWithInvestmentForHolder] = await Promise.all([
+			const [
+				vaultBalance,
+				farmPrice,
+				totalSupply,
+				underlyingBalanceWithInvestmentForHolder,
+			] = await Promise.all([
+				vaultContract.balanceOf(walletAddress),
 				API.getTokenPrice(vault.underlying.address),
 				vaultContract.totalSupply(),
 				vaultContract.underlyingBalanceWithInvestmentForHolder(walletAddress),
 			]);
+			const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
+			const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
 
 			const intUnderlyingBalanceWithInvestmentForHolder = parseInt(
 				underlyingBalanceWithInvestmentForHolder._hex,
@@ -174,21 +182,24 @@ export const getAssets = async (
 				underlyingBalance: 0,
 			};
 		}
+		const vaultBalance = await vaultContract.balanceOf(walletAddress);
+		const vaultBalanceIntNumber = parseInt(vaultBalance._hex, 16);
+		const prettyVaultBalance = makeBalancePrettier(vaultBalanceIntNumber, vault.decimals);
 
 		return {
 			name: vault.contract.name,
 			earnFarm: false,
 			farmToClaim: 0,
 			stakedBalance: 0,
-			percentOfPool: '0.000%',
+			percentOfPool: '0.00000%',
 			value: 0,
 			unstakedBalance: prettyVaultBalance,
 			address: vault.contract.address,
 			underlyingBalance: 0,
 		};
 	});
-	const assetsData = await Promise.all(assetData);
-	const nonZeroAssets = assetsData.filter(asset => {
+	const assetsDataResolved: IAssetsInfo[] = await Promise.all(assetsData);
+	const nonZeroAssets = assetsDataResolved.filter(asset => {
 		return (
 			asset.farmToClaim ||
 			asset.stakedBalance ||
@@ -198,6 +209,6 @@ export const getAssets = async (
 		);
 	});
 
-	// console.log('1111 nonZeroAssets', nonZeroAssets);
+	console.log('1111 nonZeroAssets', nonZeroAssets);
 	return nonZeroAssets;
 };

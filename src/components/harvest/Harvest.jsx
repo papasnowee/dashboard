@@ -15,8 +15,6 @@ const Harvest = () => {
 		// setHarvesting(true);
 		setState(prevState => ({ ...prevState, minimumHarvestAmount: '0' }));
 
-		console.log('harvesting');
-
 		setHarvestAndStakeMessage({
 			...harvestAndStakeMessage,
 			first: 'Harvesting your rewards.',

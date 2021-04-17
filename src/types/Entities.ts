@@ -33,12 +33,12 @@ export interface IVault {
 
 export interface IAssetsInfo {
 	name: string;
-	earnFarm: number;
+	earnFarm: boolean;
 	farmToClaim: number;
 	stakedBalance: number;
-	percentOfPool: number;
+	percentOfPool: string;
 	value: number;
 	unstakedBalance: number;
 	address: string;
-	underlyingBalancering: number;
+	underlyingBalance: number;
 }

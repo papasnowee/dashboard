@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 import { fonts } from '../../styles/appStyles';
+import { IAssetsInfo } from '../../types';
 import {
 	TableContainer,
 	MainTableInner,
@@ -12,6 +13,12 @@ import {
 	Tabs,
 } from './FarmingTableStyles';
 import FarmTableSkeleton from './FarmTableSkeleton';
+
+interface IProps {
+	display: boolean;
+	assets: IAssetsInfo[];
+	currentExchangeRate: number;
+}
 
 // const { utils } = harvest;
 
@@ -42,9 +49,7 @@ const columns = [
 	},
 ];
 
-const FarmingTable = ({ display, assets }) => {
-	
-
+const FarmingTable: React.FC<IProps> = ({ display, assets, currentExchangeRate }) => {
 	// const [sortedSummary, setSortedSummary] = useState([]);
 	// const [sortDirection, setSortDirection] = useState(1);
 	// const sortSummary = (_col, index) => {
@@ -148,7 +153,7 @@ const FarmingTable = ({ display, assets }) => {
 								return (
 									<MainTableRow key={asset.address}>
 										<div className="name">{asset.name}</div>
-										<div className="active">{String(asset.earnFarm)}</div>
+										<div className="active">{asset.earnFarm.toString()}</div>
 										<div
 											className="earned-rewards"
 											// onKeyUp={() => getThisReward(summary.earnedRewards)}
@@ -156,13 +161,13 @@ const FarmingTable = ({ display, assets }) => {
 											role="button"
 											tabIndex={0}
 										>
-											{asset.farmToClaim}
+											{asset.farmToClaim.toFixed(6)}
 										</div>
-										<div className="staked">{asset.stakedBalance}</div>
+										<div className="staked">{asset.stakedBalance.toFixed(6)}</div>
 										<div className="pool">{asset.percentOfPool}</div>
-										<div className="underlying">{asset.underlyingBalance}</div>
-										<div className="value">{asset.value}</div>
-										<div className="unstaked">{asset.unstakedBalance}</div>
+										<div className="underlying">{asset.underlyingBalance.toFixed(6)}</div>
+										<div className="value">{(asset.value * currentExchangeRate).toFixed(2)}</div>
+										<div className="unstaked">{asset.unstakedBalance.toFixed(6)}</div>
 									</MainTableRow>
 								);
 							})}
