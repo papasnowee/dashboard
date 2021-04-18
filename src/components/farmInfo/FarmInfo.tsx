@@ -18,12 +18,9 @@ const FarmInfo: React.FC<IProps> = ({ assets }) => {
 
 	// const pretySavedGas = new Intl.NumberFormat('en').format(savedGas);
 
-	let stakedBalance = 0;
-	if (assets.length) {
-		stakedBalance = assets.reduce((acc, currentAsset) => {
-			return acc + currentAsset.value;
-		}, 0);
-	}
+	const stakedBalance = assets.reduce((acc, currentAsset) => {
+		return acc + currentAsset.value;
+	}, 0);
 
 	const cellsData = [
 		{ value: prettyBalance(stakedBalance, baseCurrency), text: 'Staked Balance' },

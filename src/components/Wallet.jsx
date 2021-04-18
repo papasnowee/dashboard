@@ -104,8 +104,7 @@ const WalletTab = styled.div`
 	font-family: ${fonts.headerFont};
 	font-size: 2rem;
 `;
-const Wallet = ({ address, provider, setAddress, disconnect, buttonText }) => {
-	const { setRadio, setCheckingBalance, setShowAssetsToCheck } = useContext(HarvestContext);
+const Wallet = ({ address, provider, disconnect, buttonText }) => {
 
 	const renderConnectStatus = () => {
 		return (
