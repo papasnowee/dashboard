@@ -1,6 +1,5 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import styled from 'styled-components';
-import HarvestContext from '../Context/HarvestContext';
 import { fonts } from '../styles/appStyles';
 import { prettyEthAddress } from '../lib/utils';
 
@@ -21,7 +20,6 @@ const WalletConnection = styled.div`
 	@media (max-width: 580px) {
 		font-size: 1.7rem;
 	}
-
 	@media (max-width: 550px) {
 		font-size: 1.7rem;
 	}
@@ -49,7 +47,6 @@ const WalletConnection = styled.div`
 	@media (max-width: 328px) {
 		font-size: 0.9rem;
 	}
-
 	a,
 	a:visited,
 	a:hover,
@@ -57,22 +54,18 @@ const WalletConnection = styled.div`
 		color: ${props => props.theme.style.primaryFontColor};
 		text-decoration: none;
 	}
-
 	div {
 		.ghost {
 			color: ${props => props.theme.style.primaryFontColor};
 			font-size: 1.8rem;
 		}
 	}
-
 	.connect-status-container {
 		display: flex;
 		align-items: center;
-
 		a {
 			margin-right: 10px;
 		}
-
 		.button-div {
 			.clear {
 				margin: 0px;

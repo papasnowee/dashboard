@@ -96,14 +96,12 @@ const Main = styled.div`
 		align-items: center;
 		justify-content: space-evenly;
 	}
-
 	@media (max-width: 1107px) {
 		.farm-info {
 			display: flex;
 			flex-direction: column-reverse;
 		}
 	}
-
 	.button-div {
 		display: flex;
 		flex-direction: column;
@@ -118,7 +116,6 @@ const Main = styled.div`
 				top: 1.5px;
 			}
 		}
-
 		.clear {
 			position: relative;
 			z-index: 400;
