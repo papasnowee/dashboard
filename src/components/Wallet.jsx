@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { fonts } from '../styles/appStyles';
-import { prettyEthAddress } from '../lib/utils';
+import { prettyEthAddress } from '../utils/utils';
 
 const WalletConnection = styled.div`
 	border: ${props => props.theme.style.mainBorder};
