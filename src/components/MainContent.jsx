@@ -7,96 +7,118 @@ import AddTokens from './addTokens/AddTokens';
 import Wallet from './Wallet';
 import FarmingTable from './farmingTable/FarmingTable';
 import FarmInfo from './farmInfo/FarmInfo';
-import AssetTable from './assetTable/AssetTable';
 import HarvestContext from '../Context/HarvestContext';
 
-const MainContent = ({ setState, openModal }) => {
-  const { isCheckingBalance, state } = useContext(HarvestContext);
+// TODO split into two pages: user page and check balance page
+const MainContent = ({ setState }) => {
+	const {
+		isCheckingBalance,
+		state,
+		userAssets,
+		assetsToCheck,
+		userWalletAddress,
+		setUserWalletAddress,
+		showUserAssets,
+		showAssetsToCheck,
+		disconnect,
+		currentExchangeRate,
+	} = useContext(HarvestContext);
 
-  return (
-    <Main>
-      {isCheckingBalance ? (
-        ''
-      ) : (
-        <Row>
-          <Col>
-            <Wallet theme={state.theme} address={state.address} provider={state.provider} />
-          </Col>
-        </Row>
-      )}
-      <Row>
-        <Col>
-          <FarmInfo />
-        </Col>
-      </Row>
+	const assets = isCheckingBalance ? assetsToCheck : userAssets;
+	return (
+		<Main>
+			{!isCheckingBalance && (
+				<Row>
+					<Col>
+						<Wallet
+							buttonText="Disconnect"
+							address={userWalletAddress}
+							provider={state.provider}
+							setAddress={setUserWalletAddress}
+							disconnect={disconnect}
+						/>
+					</Col>
+				</Row>
+			)}
 
-      {isCheckingBalance ? (
-        ''
-      ) : (
-        <Row style={{ marginTop: '15px' }}>
-          {/* Git hub pages would not recognize the margin from the bootstrap grid */}
-          <Col lg="12">
-            <Harvest state={state} setState={setState} openModal={openModal} />
-          </Col>
-        </Row>
-      )}
-      <Row>
-        <Col>
-          <FarmingTable />
-        </Col>
-      </Row>
+			<Row>
+				<Col>
+					<FarmInfo assets={assets} />
+				</Col>
+			</Row>
 
-      {isCheckingBalance ? (
-        ''
-      ) : (
-        <Row style={{ marginTop: '15px' }}>
-          {/* Git hub pages would not recognize the margin from the bootstrap grid */}
-          <Col lg="12">
-            <AddTokens state={state} />
-          </Col>
-        </Row>
-      )}
+			{/* {!isCheckingBalance && ( // // TODO: return this buttons and fixed their
+				<Row style={{ marginTop: '15px' }}>
+					{/* Git hub pages would not recognize the margin from the bootstrap grid */}
+					{/*<Col lg="12"> 
+						<Harvest state={state} setState={setState} />
+					</Col>
+				</Row>
+			)} */}
+			{isCheckingBalance ? (
+				<Row>
+					<Col>
+						<FarmingTable
+							currentExchangeRate={currentExchangeRate}
+							display={showAssetsToCheck}
+							assets={assets}
+						/>
+					</Col>
+				</Row>
+			) : (
+				<Col>
+					<FarmingTable
+						currentExchangeRate={currentExchangeRate}
+						display={showUserAssets}
+						assets={assets}
+					/>
+				</Col>
+			)}
 
-      <AssetTable state={state} />
-    </Main>
-  );
+			{!isCheckingBalance && (
+				<Row style={{ marginTop: '15px' }}>
+					{/* Git hub pages would not recognize the margin from the bootstrap grid */}
+					<Col lg="12">
+						<AddTokens state={state} />
+					</Col>
+				</Row>
+			)}
+		</Main>
+	);
 };
 
 export default MainContent;
 
 const Main = styled.div`
-  .farm-info {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-  }
-
-  @media (max-width: 1107px) {
-    .farm-info {
-      display: flex;
-      flex-direction: column-reverse;
-    }
-  }
-
-  .button-div {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    .button {
-      width: max-content;
-      margin: 2rem auto 2rem auto;
-      font-size: 2rem;
-      font-family: ${fonts.headerFont};
-      position: relative;
-      &:hover {
-        top: 1.5px;
-      }
-    }
-
-    .clear {
-      position: relative;
-      z-index: 400;
-    }
-  }
+	.farm-info {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: space-evenly;
+	}
+	@media (max-width: 1107px) {
+		.farm-info {
+			display: flex;
+			flex-direction: column-reverse;
+		}
+	}
+	.button-div {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		.button {
+			width: max-content;
+			margin: 2rem auto 2rem auto;
+			font-size: 2rem;
+			font-family: ${fonts.headerFont};
+			position: relative;
+			&:hover {
+				top: 1.5px;
+			}
+		}
+		.clear {
+			position: relative;
+			z-index: 400;
+		}
+	}
 `;
