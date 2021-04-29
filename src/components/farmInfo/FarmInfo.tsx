@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 
 import { HarvestContext } from '../../Context/HarvestContext'
 import Container from './FarmInfoStyles'
@@ -6,6 +6,8 @@ import { BluePanel } from '../bluePanel/BluePanel'
 import { LoadingBluePanel } from '../bluePanel/components/loadingBluePanel/LoadingBluePanel.styles'
 import { IAssetsInfo } from '../../types'
 import { prettyBalance, convertStandardNumber } from '../../utils/utils'
+import { API } from '@/api'
+import { farmAddress } from '@/constants/constants'
 
 interface IProps {
   assets: IAssetsInfo[]
@@ -18,14 +20,24 @@ export const FarmInfo: React.FC<IProps> = ({ assets, savedGas }) => {
     currentExchangeRate,
     displayFarmInfo,
     baseCurrency,
+    setState,
   } = useContext(HarvestContext)
+
+  useEffect(() => {
+    const getFarmPrice = async () => {
+      const farmPrice = await API.getPrice(farmAddress, state.provider)
+      setState((prevState) => ({ ...prevState, farmPrice }))
+    }
+
+    if (state.provider) {
+      getFarmPrice()
+    }
+  }, [state.provider])
 
   const farmPriceValue = convertStandardNumber(
     state.farmPrice * currentExchangeRate,
     baseCurrency,
   )
-
-  const pretySavedGas = new Intl.NumberFormat('en').format(Math.round(savedGas))
 
   const stakedBalance = assets.reduce((acc, currentAsset) => {
     return acc + currentAsset.value
@@ -38,7 +50,10 @@ export const FarmInfo: React.FC<IProps> = ({ assets, savedGas }) => {
     },
     { value: `${state.apy}%`, text: 'Profit Share APY' },
     { value: farmPriceValue, text: 'FARM price' },
-    { value: pretySavedGas, text: 'Personal Saved Gas' },
+    {
+      value: prettyBalance(savedGas, baseCurrency),
+      text: 'Personal Saved Gas',
+    },
     // TODO: fix 'farm earned'
     // { value: state.totalFarmEarned?.toFixed(6), text: 'Farm Earned' },
     { value: '-', text: 'Farm Earned' },
