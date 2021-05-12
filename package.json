@@ -3,7 +3,7 @@
   "scripts": {
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development",
-    "start": "webpack-dev-server --port 3000 --mode development --open --hot",
+    "start": "node server.js",
     "predeploy": "npm run build",
     "prettier": "prettier --write .",
     "lint": "eslint src/**/*.{js,ts,tsx} --quiet --fix --max-warnings 0",
