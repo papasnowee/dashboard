@@ -27,7 +27,6 @@ scripts/*.json
 node_modules
 dist
 build
-.env
 .history
 storybook-static
 workingFiles
