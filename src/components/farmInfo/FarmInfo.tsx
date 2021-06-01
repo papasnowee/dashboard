@@ -6,8 +6,8 @@ import Container from './FarmInfoStyles'
 import { BluePanel } from '../bluePanel/BluePanel'
 import { IAssetsInfo } from '../../types'
 import { prettyCurrency, convertStandardNumber } from '../../utils/utils'
-import { API } from '@/api'
 import { farmAddress } from '@/constants/constants'
+import { EthereumService } from '@/services/EthereumService'
 
 interface IProps {
   assets: IAssetsInfo[]
@@ -20,7 +20,9 @@ export const FarmInfo: React.FC<IProps> = ({ assets, savedGas }) => {
 
   useEffect(() => {
     const getFarmPrice = async () => {
-      const farmPrice = await API.getEtheriumPrice(farmAddress)
+      const farmPrice: BigNumber | null = await EthereumService.getPrice(
+        farmAddress,
+      )
 
       setState((prevState) => ({
         ...prevState,
@@ -40,7 +42,10 @@ export const FarmInfo: React.FC<IProps> = ({ assets, savedGas }) => {
 
   const stakedBalance = assets
     .reduce((acc, currentAsset) => {
-      return acc.plus(currentAsset.value)
+      const currentAssetValue = currentAsset.value
+        ? currentAsset.value
+        : new BigNumber(0)
+      return acc.plus(currentAssetValue)
     }, new BigNumber(0))
     .multipliedBy(currentExchangeRate)
 
