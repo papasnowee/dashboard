@@ -33,6 +33,7 @@ export class API {
     )
 
     const savedGas = response?.data?.data ?? 0
+
     return savedGas
   }
 
@@ -66,5 +67,12 @@ export class API {
     }
 
     return response?.data.data ?? []
+  }
+
+  static async getExchangeRates(params?: string) {
+    const response = await axios.get(
+      `https://api.ratesapi.io/api/latest${params ?? ''}`,
+    )
+    return response?.data?.rates ?? {}
   }
 }

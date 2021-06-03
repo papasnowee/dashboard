@@ -1,6 +1,3 @@
-import Web3 from 'web3'
-import BigNumber from 'bignumber.js'
-
 const currencyFormatter = (currency: string) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',

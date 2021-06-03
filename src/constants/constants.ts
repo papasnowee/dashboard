@@ -66,13 +66,9 @@ export const iPSAddress: IVault = {
   underlyingUnit: 18,
 }
 
-export const ethereumOutdatedVaults = new Set<string>([
-  '0xc3f7ffb5d5869b3ade9448d094d81b0521e8326f',
-  '0x63671425ef4d25ec2b12c7d05de855c143f16e3b',
-])
-export const outdatedPools = new Set<string>([
-  // '0x8f5adc58b32d4e5ca02eac0e293d35855999436c',
-])
+export const ethereumOutdatedVaults = new Set<string>([])
+
+export const outdatedPools = new Set<string>([])
 
 export const bscOutdatedVaults = new Set<string>([
   '0x59258f4e15a5fc74a7284055a8094f58108dbd4f',

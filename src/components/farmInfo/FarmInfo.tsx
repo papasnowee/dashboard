@@ -1,74 +1,56 @@
-import React, { useContext, useEffect } from 'react'
-import BigNumber from 'bignumber.js'
-
-import { HarvestContext } from '../../Context/HarvestContext'
+import React from 'react'
 import Container from './FarmInfoStyles'
 import { BluePanel } from '../bluePanel/BluePanel'
-import { IAssetsInfo } from '../../types'
-import { prettyCurrency, convertStandardNumber } from '../../utils/utils'
-import { farmAddress } from '@/constants/constants'
-import { EthereumService } from '@/services/EthereumService'
+import { prettyCurrency } from '../../utils/utils'
+import { useStores } from '@/stores/utils'
+import { observer } from 'mobx-react'
+import { LoadingBluePanel } from '@components/bluePanel/components/loadingBluePanel/LoadingBluePanel.styles'
+import BigNumber from 'bignumber.js'
 
-interface IProps {
-  assets: IAssetsInfo[]
-  savedGas: number
+type FarmInfoProps = {
+  isLoadingAssets: boolean
+  stakedBalance: BigNumber
 }
 
-export const FarmInfo: React.FC<IProps> = ({ assets, savedGas }) => {
-  const { state, currentExchangeRate, baseCurrency, setState } =
-    useContext(HarvestContext)
+export const FarmInfo: React.FC<FarmInfoProps> = observer((props) => {
+  const { stakedBalance, isLoadingAssets } = props
 
-  useEffect(() => {
-    const getFarmPrice = async () => {
-      const farmPrice: BigNumber | null = await EthereumService.getPrice(
-        farmAddress,
-      )
+  const { farmPriceStore, settingsStore, savedGasStore, apyStore } = useStores()
 
-      setState((prevState) => ({
-        ...prevState,
-        farmPrice,
-      }))
-    }
+  const farmPriceValue = farmPriceStore.getValue() ?? '-'
 
-    if (state.provider) {
-      getFarmPrice()
-    }
-  }, [])
+  const baseCurrency = settingsStore.settings.currency.value
+  const apy = apyStore.value
+  const savedGas = savedGasStore.value
 
-  const farmPriceValue = convertStandardNumber(
-    state.farmPrice.toNumber() * currentExchangeRate,
-    baseCurrency,
-  )
+  const isLoading =
+    isLoadingAssets ||
+    farmPriceStore.isFetching ||
+    savedGasStore.isFetching ||
+    apyStore.isFetching
 
-  const stakedBalance = assets
-    .reduce((acc, currentAsset) => {
-      const currentAssetValue = currentAsset.value
-        ? currentAsset.value
-        : new BigNumber(0)
-      return acc.plus(currentAssetValue)
-    }, new BigNumber(0))
-    .multipliedBy(currentExchangeRate)
-
-  const apy = state.apy ? `${state.apy}%` : 'Error'
+  const displayApy = apy && apy !== '0' ? `${apy}%` : 'Error'
   const cellsData = [
     {
       value: prettyCurrency(stakedBalance.toNumber(), baseCurrency),
       text: 'Staked Balance',
     },
-    { value: apy, text: 'Profit Share APY' },
+    { value: displayApy, text: 'Profit Share APY' },
     { value: farmPriceValue, text: 'FARM price' },
     {
       value: prettyCurrency(savedGas, baseCurrency),
       text: 'Personal Saved Gas',
     },
-    // TODO: fix 'farm earned'
-    // { value: state.totalFarmEarned?.toFixed(6), text: 'Farm Earned' },
     { value: '-', text: 'Farm Earned' },
   ]
 
   const Cells = cellsData.map((item) => {
-    return <BluePanel key={item.text} value={item.value} text={item.text} />
+    return isLoading ? (
+      <LoadingBluePanel key={item.text} />
+    ) : (
+      <BluePanel key={item.text} value={item.value} text={item.text} />
+    )
   })
 
   return <Container>{Cells}</Container>
-}
+})
