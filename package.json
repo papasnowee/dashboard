@@ -9,6 +9,7 @@
     "prettier": "prettier --write .",
     "lint": "eslint src/**/*.{js,ts,tsx} --fix --max-warnings 0",
     "test": "jest --no-cache",
+    "test:coverage": "npx jest --silent --ci --coverage --coverageReporters='text' --coverageReporters='text-summary'",
     "test:watch": "npm test -- --watch",
     "test:loki": "npm run build-storybook && loki --requireReference --reactUri file:./storybook-static",
     "loki:update": "npm run build-storybook && loki update --requireReference --reactUri file:./storybook-static",
