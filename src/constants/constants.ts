@@ -1,5 +1,8 @@
 /** This Set contains addresses of vaults that have no reward  */
-import { BSC_ORACLE_ABI_FOR_GETTING_PRICES } from '@/lib/data/ABIs'
+import {
+  BSC_ORACLE_ABI_FOR_GETTING_PRICES,
+  SNOWSWAP_STAKING_POOL_ABI,
+} from '@/lib/data/ABIs'
 import { IVault } from '@/types'
 import BigNumber from 'bignumber.js'
 import Web3 from 'web3'
@@ -30,7 +33,7 @@ export const iPSAddress: IVault = {
   contract: {
     id: 0,
     address: '0x1571eD0bed4D987fe2b498DdBaE7DFA19519F651',
-    name: 'iPS',
+    name: 'iFarm',
     created: 0,
     type: 0,
     network: 'eth',
@@ -60,8 +63,8 @@ export const iPSAddress: IVault = {
     network: 'eth',
   },
   updatedBlock: 0,
-  name: 'iPS',
-  symbol: 'iPS',
+  name: 'iFarm',
+  symbol: 'iFarm',
   decimals: 18,
   underlyingUnit: 18,
 }
@@ -73,6 +76,16 @@ export const outdatedPools = new Set<string>([])
 export const bscOutdatedVaults = new Set<string>([
   '0x59258f4e15a5fc74a7284055a8094f58108dbd4f',
 ])
+
+export const SNOWSWAP = {
+  fSnow: {
+    address: '0xfe9a29ab92522d14fc65880d817214261d8479ae',
+  },
+  fSnowStakingPool: {
+    address: '0xe4a692e8f954e1a108cb184bdb18064ca3962801',
+    abi: SNOWSWAP_STAKING_POOL_ABI,
+  },
+}
 
 export const ETHEREUM_CONTRACT_FOR_GETTING_PRICES =
   '0x48dc32eca58106f06b41de514f29780ffa59c279'

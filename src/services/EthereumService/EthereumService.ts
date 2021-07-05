@@ -13,6 +13,7 @@ import {
   PRICE_DECIMALS,
   PSAddress,
   vaultsWithoutReward,
+  SNOWSWAP,
 } from '@/constants/constants'
 import {
   ERC20_ABI_GET_PRICE_PER_FULL_SHARE,
@@ -28,6 +29,7 @@ import { BigNumber } from 'bignumber.js'
 import { API } from '@/api'
 import { BlockchainService } from '../BlockchainService.ts'
 import Web3 from 'web3'
+import { contractToName } from '@/utils/utils'
 
 export class EthereumService {
   static async getAssetsFromPool(
@@ -194,12 +196,12 @@ export class EthereumService {
       : null
 
     const name = relatedVault
-      ? relatedVault.contract?.name || 'no name'
-      : pool.contract?.name || 'no name'
+      ? contractToName(relatedVault.contract)
+      : contractToName(pool.contract)
 
     return {
       name,
-      earnFarm: true,
+      earnFarm: !vaultsWithoutReward.has(name),
       farmToClaim: rewardTokenAreInFARM,
       stakedBalance: prettyPoolBalance,
       percentOfPool,
@@ -324,7 +326,7 @@ export class EthereumService {
             : null
 
         return {
-          name: vault.contract.name,
+          name: contractToName(vault.contract),
           earnFarm: true,
           farmToClaim: BigNumberZero,
           stakedBalance: prettyVaultBalance,
@@ -388,8 +390,8 @@ export class EthereumService {
             ? prettyVaultBalance.multipliedBy(farmPrice)
             : null
         return {
-          name: vault.contract?.name || 'no name',
-          earnFarm: !vaultsWithoutReward.has(vault.contract.name),
+          name: contractToName(vault.contract),
+          earnFarm: !vaultsWithoutReward.has(contractToName(vault.contract)),
           farmToClaim: BigNumberZero,
           stakedBalance: prettyVaultBalance,
           percentOfPool,
@@ -411,7 +413,7 @@ export class EthereumService {
 
       return {
         name: `${vault.contract.name} (has not pool)`,
-        earnFarm: !vaultsWithoutReward.has(vault.contract.name),
+        earnFarm: !vaultsWithoutReward.has(contractToName(vault.contract)),
         farmToClaim: BigNumberZero,
         stakedBalance: BigNumberZero,
         percentOfPool: BigNumberZero,
@@ -429,59 +431,124 @@ export class EthereumService {
   // Case 4: Vault it is iFarm.
   // Case 5: Vault it is PS.
   static getAssets = async (walletAddress: string): Promise<IAssetsInfo[]> => {
-    // get all pools and vaults
-    const [pools, vaults, farmPrice] = await Promise.all<
-      IPool[],
-      IVault[],
-      BigNumber | null
-    >([
-      API.getEthereumPools(),
-      API.getEthereumVaults(),
-      EthereumService.getPrice(farmAddress),
-    ])
+    try {
+      // get all pools and vaults
+      const [pools, vaults, farmPrice] = await Promise.all<
+        IPool[],
+        IVault[],
+        BigNumber | null
+      >([
+        API.getEthereumPools(),
+        API.getEthereumVaults(),
+        EthereumService.getPrice(farmAddress),
+      ])
 
-    const actualVaults = vaults.filter((v) => {
-      return !ethereumOutdatedVaults.has(v.contract.address.toLowerCase())
-    })
+      const actualVaults = vaults.filter((v) => {
+        return !ethereumOutdatedVaults.has(v.contract.address.toLowerCase())
+      })
 
-    actualVaults.push(iPSAddress)
+      actualVaults.push(iPSAddress)
 
-    const actualPools = pools.filter((p) => {
-      return p.contract?.address && !outdatedPools.has(p.contract.address)
-    })
+      const actualPools = pools.filter((p) => {
+        return p.contract?.address && !outdatedPools.has(p.contract.address)
+      })
 
-    const assetsFromVaultsPromises = EthereumService.getAssetsFromVaults(
-      actualVaults,
-      actualPools,
+      const assetsFromVaultsPromises = EthereumService.getAssetsFromVaults(
+        actualVaults,
+        actualPools,
+        walletAddress,
+        farmPrice,
+      )
+
+      const poolsWithoutVaults = actualPools.filter((pool) => {
+        return !vaults.find(
+          (vault) => vault.contract.address === pool.lpToken?.address,
+        )
+      })
+
+      const assetsFromPoolsWithoutVaultsPromises = poolsWithoutVaults.map(
+        (pool) =>
+          EthereumService.getAssetsFromPool(pool, walletAddress, farmPrice),
+      )
+
+      const assetsDataResolved: IAssetsInfo[] = await Promise.all([
+        ...assetsFromVaultsPromises,
+        ...assetsFromPoolsWithoutVaultsPromises,
+      ])
+      const nonZeroAssets = assetsDataResolved.filter((asset) => {
+        return (
+          asset.farmToClaim?.toNumber() ||
+          asset.stakedBalance?.toNumber() ||
+          (asset.value && asset.value.toNumber()) ||
+          asset.underlyingBalance?.toNumber()
+        )
+      })
+
+      return nonZeroAssets
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.log(`Error in the getAssets: ${error}`)
+      return []
+    }
+  }
+
+  static getSnowswapAssets = async (
+    walletAddress: string,
+  ): Promise<IAssetsInfo[]> => {
+    const stakingPool = new ethWeb3.eth.Contract(
+      SNOWSWAP.fSnowStakingPool.abi,
+      SNOWSWAP.fSnowStakingPool.address,
+    )
+
+    const stakingPoolBalanceRaw = await BlockchainService.makeRequest(
+      stakingPool,
+      'balanceOf',
       walletAddress,
-      farmPrice,
+    )
+    const stakingPoolBalance = new BigNumber(stakingPoolBalanceRaw).dividedBy(
+      10 ** Number(18),
     )
 
-    const poolsWithoutVaults = actualPools.filter((pool) => {
-      return !vaults.find(
-        (vault) => vault.contract.address === pool.lpToken?.address,
-      )
-    })
+    // Return early if user is not in the pool
+    if (stakingPoolBalance.isZero()) return []
 
-    const assetsFromPoolsWithoutVaultsPromises = poolsWithoutVaults.map(
-      (pool) =>
-        EthereumService.getAssetsFromPool(pool, walletAddress, farmPrice),
+    const [snowEarnedBalanceRaw, stakingPoolTotalRaw, snowPrice] =
+      await Promise.all<string | null, string | null, BigNumber | null>([
+        BlockchainService.makeRequest(stakingPool, 'earned', walletAddress),
+        BlockchainService.makeRequest(stakingPool, 'totalSupply'),
+        EthereumService.getPrice(SNOWSWAP.fSnow.address),
+      ])
+
+    const snowEarnedBalance = new BigNumber(snowEarnedBalanceRaw).dividedBy(
+      10 ** Number(18),
+    )
+    const stakingPoolTotal = new BigNumber(stakingPoolTotalRaw).dividedBy(
+      10 ** Number(18),
+    )
+    const userPercentOfPool = stakingPoolBalance
+      .dividedBy(stakingPoolTotal)
+      .multipliedBy(100)
+
+    const snowValue = BigNumber.sum(
+      stakingPoolBalance,
+      snowEarnedBalance.multipliedBy(snowPrice),
     )
 
-    const assetsDataResolved: IAssetsInfo[] = await Promise.all([
-      ...assetsFromVaultsPromises,
-      ...assetsFromPoolsWithoutVaultsPromises,
-    ])
-    const nonZeroAssets = assetsDataResolved.filter((asset) => {
-      return (
-        asset.farmToClaim?.toNumber() ||
-        asset.stakedBalance?.toNumber() ||
-        (asset.value && asset.value.toNumber()) ||
-        asset.underlyingBalance?.toNumber()
-      )
-    })
-
-    return nonZeroAssets
+    return [
+      {
+        name: 'SNOW_DONNER_POOL',
+        earnFarm: false,
+        farmToClaim: null,
+        stakedBalance: stakingPoolBalance,
+        percentOfPool: userPercentOfPool,
+        value: snowValue,
+        unstakedBalance: null,
+        address: {
+          pool: SNOWSWAP.fSnowStakingPool.address,
+        },
+        underlyingBalance: stakingPoolBalance,
+      },
+    ]
   }
 
   static async getPrice(tokenAddress?: string): Promise<BigNumber | null> {
