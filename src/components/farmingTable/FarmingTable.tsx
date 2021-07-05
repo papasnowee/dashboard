@@ -1,6 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
-
 import { fonts } from '../../App/styles/appStyles'
 import { IAssetsInfo } from '../../types'
 import { prettyNumber, prettyCurrency } from '../../utils/utils'
@@ -12,14 +11,26 @@ import {
   PanelTabContainerLeft,
   PanelTab,
   Tabs,
+  VaultIconImg,
+  AccordionRow,
+  Flash,
+  AccordionToggle,
 } from './FarmingTableStyles'
 import FarmTableSkeleton from './FarmTableSkeleton'
 import { observer } from 'mobx-react'
 import { useStores } from '@/stores/utils'
-
+import flashSvg from '@/assets/flash.svg'
 interface IProps {
   display: boolean
   assets: IAssetsInfo[]
+}
+
+interface IVaultIconNames {
+  [key: string]: string
+}
+
+interface IVaultIconProps {
+  vaultName: string
 }
 
 const columns = [
@@ -27,31 +38,43 @@ const columns = [
     name: 'Rewards Pool',
   },
   {
-    name: 'Earn FARM',
-  },
-  {
     name: 'FARM to Claim',
-  },
-  {
-    name: 'Staked Asset',
   },
   {
     name: '% of Pool',
   },
   {
-    name: 'Underlying balance',
-  },
-  {
     name: 'Value',
   },
-  {
-    name: 'Unstaked',
-  },
 ]
+
+const importAll = (requiredContext: __WebpackModuleApi.RequireContext) => {
+  const images: IVaultIconNames = {}
+  requiredContext.keys().forEach((item: string) => {
+    images[item.replace('./', '')] = requiredContext(item)
+  })
+  return images
+}
+const icons = importAll(
+  require.context(
+    '../../assets/harvest-icons/vaults/',
+    false,
+    /\.(png|jpe?g|svg)$/,
+  ),
+)
 
 export const FarmingTable: React.FC<IProps> = observer((props) => {
   const { display, assets } = props
   const { settingsStore, exchangeRatesStore } = useStores()
+  const [accordion, setAccordion] = useState<string[]>([])
+
+  const toggleAccordion = (id: string) => {
+    if (accordion.includes(id)) {
+      setAccordion(accordion.filter((item) => item !== id))
+    } else {
+      setAccordion([...accordion, id])
+    }
+  }
 
   const displayCurrency = settingsStore.settings.currency.value
   const currentExchangeRate =
@@ -82,25 +105,33 @@ export const FarmingTable: React.FC<IProps> = observer((props) => {
       : '-'
 
     return (
-      <MainTableRow key={asset.address.pool || asset.address.vault}>
-        <div className="name">{asset.name}</div>
-        <div className="active">{asset.earnFarm.toString()}</div>
-        <div
-          className="earned-rewards"
-          // TODO: implements it
-          // onKeyUp={() => getThisReward(summary.earnedRewards)}
-          // onClick={() => getThisReward(summary.earnedRewards)}
-          role="button"
-          tabIndex={0}
+      <>
+        <MainTableRow
+          key={asset.address.pool || asset.address.vault}
+          open={accordion.includes(asset.name)}
+          onClick={() => {
+            toggleAccordion(asset.name)
+          }}
         >
-          {prettyFarmToClaim}
-        </div>
-        <div className="staked">{prettyStakedBalance}</div>
-        <div className="pool">{persentOfPool}</div>
-        <div className="underlying">{prettyUnderlyingBalance}</div>
-        <div className="value">{prettyValue}</div>
-        <div className="unstaked">{prettyUnstakedBalance}</div>
-      </MainTableRow>
+          <div title={asset.earnFarm ? 'Earn FARM: true' : undefined}>
+            <VaultIcon vaultName={asset.name} />
+            {asset.name} {asset.earnFarm && <Flash src={flashSvg} alt="" />}
+          </div>
+          {/* <div className="active">{asset.earnFarm.toString()}</div> */}
+          <div tabIndex={0}>{prettyFarmToClaim}</div>
+          <div>{persentOfPool}</div>
+          <div>{prettyValue}</div>
+          <AccordionToggle open={accordion.includes(asset.name)}>
+            {' '}
+            <i></i>
+          </AccordionToggle>
+        </MainTableRow>
+        <AccordionRow open={accordion.includes(asset.name)}>
+          <div>Staked Asset: {prettyStakedBalance}</div>
+          <div>Underlying balance: {prettyUnderlyingBalance}</div>
+          <div>Unstaked: {prettyUnstakedBalance}</div>
+        </AccordionRow>
+      </>
     )
   })
 
@@ -156,6 +187,22 @@ export const FarmingTable: React.FC<IProps> = observer((props) => {
     </>
   )
 })
+
+const VaultIcon: React.FC<IVaultIconProps> = (props) => {
+  const { vaultName } = props
+  return (
+    <VaultIconImg
+      src={`${
+        icons[
+          vaultName
+            .replace(/^V_/, '')
+            .replace(/^P_[f]?/, '')
+            .replace(/_#V\d$/, '') + '.png'
+        ]
+      }`}
+    ></VaultIconImg>
+  )
+}
 
 const NoAssetTable = styled.div`
   display: flex;
