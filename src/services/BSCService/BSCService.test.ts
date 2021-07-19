@@ -52,6 +52,10 @@ describe('BSCService', () => {
     })
   })
   describe('getAssetsFromPool', () => {
+    const testPartialAssetData = {
+      underlyingAddress: '0xserdfs43r34r34r34r34r34r',
+    }
+
     test('positive scenario', () => {
       const poolWithVault = {
         id: 2,
@@ -175,6 +179,7 @@ describe('BSCService', () => {
         poolWithVault,
         testWalletAddressFoBSC,
         bFarmPrice,
+        testPartialAssetData,
         relatedVault,
       )
         .then((assetsInfo) => {
@@ -319,6 +324,7 @@ describe('BSCService', () => {
         poolWithVault,
         testWalletAddressFoBSC,
         bFarmPrice,
+        testPartialAssetData,
         relatedVault,
       )
         .then((assetsInfo) => {
