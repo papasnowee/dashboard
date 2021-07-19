@@ -31,22 +31,6 @@ export const AnalyticsTabs: React.FC<AnalyticsTabsProps> = (props) => {
       <PanelTab
         className={
           showAnalytics
-            ? 'analytics-tab unfolded unfolded-second'
-            : 'analytics-tab folded second'
-        }
-      >
-        <a
-          className="analyti-link"
-          href="https://duneanalytics.com/0xBoxer/-grain"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          GRAIN analytics
-        </a>
-      </PanelTab>
-      <PanelTab
-        className={
-          showAnalytics
             ? 'analytics-tab unfolded unfolded-third'
             : 'analytics-tab folded third'
         }

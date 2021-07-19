@@ -11,7 +11,13 @@ import {
 } from '@/constants/constants'
 
 import { BSC_UNDERLYING_ABI, FTOKEN_ABI, REWARDS_ABI } from '@/lib/data/ABIs'
-import { IAssetsInfo, IPool, IVault } from '@/types/entities'
+import {
+  IAssetsInfo,
+  IPool,
+  IVault,
+  BSC,
+  IPartialAssetData,
+} from '@/types/entities'
 import { BigNumber } from 'bignumber.js'
 import { API } from '@/api'
 import { BlockchainService } from '../BlockchainService.ts'
@@ -21,6 +27,7 @@ export class BSCService {
     pool: IPool,
     walletAddress: string,
     bFarmPrice: BigNumber | null,
+    partialAssetData: IPartialAssetData,
     relatedVault?: IVault,
   ): Promise<IAssetsInfo> {
     const lpTokenContract = new BSCWeb3.eth.Contract(
@@ -159,6 +166,8 @@ export class BSCService {
 
     return {
       id: address,
+      // typescript bug
+      network: BSC as typeof BSC,
       prettyName: name,
       name,
       earnFarm: true,
@@ -167,10 +176,12 @@ export class BSCService {
       percentOfPool,
       value: calcValue(),
       unstakedBalance: prettyLpTokenBalance,
-      address: relatedVault
-        ? { vault: relatedVault.contract.address }
-        : { pool: pool.contract.address },
+      address: {
+        vault: relatedVault?.contract.address,
+        pool: pool.contract.address,
+      },
       underlyingBalance,
+      ...partialAssetData,
     }
   }
 
@@ -187,11 +198,20 @@ export class BSCService {
           pool.lpToken?.address.toLowerCase()
         )
       })
+
+      const partialAssetData = {
+        underlyingAddress: BlockchainService.calcUnderlying(
+          vault,
+          vaultRelatedPool,
+        ),
+      }
+
       if (vaultRelatedPool) {
         return BSCService.getAssetsFromPool(
           vaultRelatedPool,
           walletAddress,
           bFarmPrice,
+          partialAssetData,
           vault,
         )
       }
@@ -230,6 +250,8 @@ export class BSCService {
 
       return {
         id: address,
+        // typescript bug
+        network: BSC as typeof BSC,
         prettyName: name,
         name,
         earnFarm: !vaultsWithoutReward.has(vault.contract.name),
@@ -240,6 +262,7 @@ export class BSCService {
         unstakedBalance: prettyVaultBalance,
         address: { vault: vault.contract.address },
         underlyingBalance: prettyVaultBalance,
+        ...partialAssetData,
       }
     })
   }
@@ -265,9 +288,17 @@ export class BSCService {
     })
 
     const assetsFromPoolsWithoutVaultsPromises: Promise<IAssetsInfo>[] =
-      poolsWithoutVaults.map((pool) =>
-        BSCService.getAssetsFromPool(pool, walletAddress, bFarmPrice),
-      )
+      poolsWithoutVaults.map((pool) => {
+        const partialAssetData = {
+          underlyingAddress: BlockchainService.calcUnderlying(undefined, pool),
+        }
+        return BSCService.getAssetsFromPool(
+          pool,
+          walletAddress,
+          bFarmPrice,
+          partialAssetData,
+        )
+      })
 
     const assetsDataResolved: IAssetsInfo[] = await Promise.all([
       ...assetsFromVaultsPromises,

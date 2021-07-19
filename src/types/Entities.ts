@@ -8,6 +8,10 @@ export interface IContract {
   type?: number
   /** TODO: to type */
   network?: null | string
+  underlying?: null | { address?: string }
+  createdDate: number | null
+  updated: number | null
+  updatedDate: number | null
 }
 
 interface IVaultAndPoolAddresses {
@@ -24,6 +28,7 @@ export interface IPool {
   contract: IContract
   updatedBlock?: number
   governance?: IContract
+  controller: IContract
   owner?: IContract
   lpToken?: IContract
   rewardToken?: IRewardToken
@@ -32,18 +37,27 @@ export interface IPool {
 export interface IVault {
   id: number
   contract: IContract
-  updatedBlock: number | null
+  controller: IContract
+  updatedBlock?: number | null
   governance?: IContract
   strategy: IContract | null
-  underlying: IContract | null
+  underlying?: IContract | null
   name: string
   symbol: string
   decimals?: number
   underlyingUnit?: number
 }
 
+export const ETH = 'eth'
+export const BSC = 'bsc'
+
+export interface IPartialAssetData {
+  underlyingAddress: IAssetsInfo['underlyingAddress']
+}
+
 export interface IAssetsInfo {
   id: string
+  network: typeof ETH | typeof BSC
   name: string
   prettyName: string
   earnFarm: boolean
@@ -54,4 +68,5 @@ export interface IAssetsInfo {
   unstakedBalance: BigNumber | null
   address: IVaultAndPoolAddresses
   underlyingBalance: BigNumber | null
+  underlyingAddress?: string
 }

@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
 import { fonts } from '../../App/styles/appStyles'
-import { IAssetsInfo } from '../../types'
 import { prettyNumber, prettyCurrency } from '../../utils/utils'
 import {
   TableContainer,
@@ -16,10 +15,12 @@ import {
   Flash,
   AccordionToggle,
 } from './FarmingTableStyles'
-import FarmTableSkeleton from './FarmTableSkeleton'
+import { FarmTableSkeleton } from './FarmTableSkeleton'
+import { ToolTip } from '../Tooltip'
 import { observer } from 'mobx-react'
 import { useStores } from '@/stores/utils'
 import flashSvg from '@/assets/flash.svg'
+import { BSC, ETH, IAssetsInfo } from '@types/entities'
 interface IProps {
   display: boolean
   assets: IAssetsInfo[]
@@ -47,6 +48,11 @@ const columns = [
     name: 'Value',
   },
 ]
+
+const rootUrl = {
+  [BSC]: 'https://bscscan.com/address/',
+  [ETH]: 'https://etherscan.io/address/',
+}
 
 const importAll = (requiredContext: __WebpackModuleApi.RequireContext) => {
   const images: IVaultIconNames = {}
@@ -110,14 +116,84 @@ export const FarmingTable: React.FC<IProps> = observer((props) => {
 
     const isOpen = accordion.includes(asset.id.toLowerCase())
 
+    const poolURL = `${rootUrl[asset.network]}${asset.address.pool}`
+    const vaultURL = `${rootUrl[asset.network]}${asset.address.vault}`
+    const underlyingURL = `${rootUrl[asset.network]}${asset.underlyingAddress}`
+
     return (
       <div key={asset.id}>
         <MainTableRow open={isOpen} onClick={() => toggleAccordion(asset.id)}>
-          <div title={asset.earnFarm ? 'Earn FARM: true' : undefined}>
-            <VaultIcon vaultName={asset.name} />
-            {asset.prettyName}{' '}
-            {asset.earnFarm && <Flash src={flashSvg} alt="" />}
-          </div>
+          <ToolTip
+            activator={
+              <div title={asset.earnFarm ? 'Earn FARM: true' : undefined}>
+                <VaultIcon vaultName={asset.name} />
+                {asset.prettyName}{' '}
+                {asset.earnFarm && <Flash src={flashSvg} alt="" />}
+              </div>
+            }
+          >
+            {asset.address.pool && (
+              <p>
+                Pool address:
+                <a
+                  href={poolURL}
+                  target="_blank"
+                  style={{
+                    textDecoration: 'none',
+                    color: '#000',
+                    fontWeight: 700,
+                  }}
+                  rel="noreferrer"
+                >
+                  {` ${asset.address.pool.slice(
+                    0,
+                    5,
+                  )}...${asset.address.pool.slice(-4)}`}
+                </a>
+              </p>
+            )}
+            {asset.address.vault && (
+              <p>
+                Vault address:
+                <a
+                  href={vaultURL}
+                  target="_blank"
+                  style={{
+                    textDecoration: 'none',
+                    color: '#000',
+                    fontWeight: 700,
+                  }}
+                  rel="noreferrer"
+                >
+                  {` ${asset.address.vault.slice(
+                    0,
+                    5,
+                  )}...${asset.address.vault.slice(-4)}`}
+                </a>
+              </p>
+            )}
+            {asset.underlyingAddress && (
+              <p>
+                Underlying address:
+                <a
+                  href={underlyingURL}
+                  target="_blank"
+                  style={{
+                    textDecoration: 'none',
+                    color: '#000',
+                    fontWeight: 700,
+                  }}
+                  rel="noreferrer"
+                >
+                  {` ${asset.underlyingAddress.slice(
+                    0,
+                    5,
+                  )}...${asset.underlyingAddress.slice(-4)}`}
+                </a>
+              </p>
+            )}
+          </ToolTip>
+
           {/* <div className="active">{asset.earnFarm.toString()}</div> */}
           <div tabIndex={0}>{prettyFarmToClaim}</div>
           <div>{persentOfPool}</div>

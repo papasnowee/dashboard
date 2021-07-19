@@ -21,7 +21,13 @@ import {
   PS_VAULT_ABI,
   REWARDS_ABI,
 } from '@/lib/data/ABIs'
-import { IAssetsInfo, IPool, IVault } from '@/types/entities'
+import {
+  IAssetsInfo,
+  IPool,
+  IVault,
+  ETH,
+  IPartialAssetData,
+} from '@/types/entities'
 import { BigNumber } from 'bignumber.js'
 import { API } from '@/api'
 import { BlockchainService } from '../BlockchainService.ts'
@@ -33,6 +39,7 @@ export class EthereumService {
     pool: IPool,
     walletAddress: string,
     farmPrice: BigNumber | null,
+    partialAssetData: IPartialAssetData,
     relatedVault?: IVault,
   ): Promise<IAssetsInfo> {
     const lpTokenContract = new ethWeb3.eth.Contract(
@@ -206,6 +213,7 @@ export class EthereumService {
     return {
       id,
       name,
+      network: ETH,
       prettyName,
       earnFarm: !vaultsWithoutReward.has(id),
       farmToClaim: rewardTokenAreInFARM,
@@ -218,6 +226,7 @@ export class EthereumService {
         pool: pool.contract?.address,
       },
       underlyingBalance,
+      ...partialAssetData,
     }
   }
 
@@ -244,6 +253,13 @@ export class EthereumService {
         )
       })
 
+      const partialAssetData = {
+        underlyingAddress: BlockchainService.calcUnderlying(
+          vault,
+          vaultRelatedPool,
+        ),
+      }
+
       const vaultContract = new ethWeb3.eth.Contract(
         FTOKEN_ABI,
         vault.contract.address,
@@ -254,9 +270,11 @@ export class EthereumService {
           vaultRelatedPool,
           walletAddress,
           farmPrice,
+          partialAssetData,
           vault,
         )
       }
+      // Case 4: Vault it is iFarm.
       if (isIFarm) {
         const farmContract = new ethWeb3.eth.Contract(
           FARM_VAULT_ABI,
@@ -335,6 +353,8 @@ export class EthereumService {
 
         return {
           id: address,
+          // typescript bug
+          network: ETH as typeof ETH,
           name: contractToName(vault.contract),
           prettyName: contractToName(vault.contract),
           earnFarm: true,
@@ -345,9 +365,11 @@ export class EthereumService {
           unstakedBalance: prettyFarmBalance,
           address: { vault: address },
           underlyingBalance,
+          ...partialAssetData,
         }
       }
 
+      // Case 5: Vault it is PS.
       if (isPS) {
         const farmContract = new ethWeb3.eth.Contract(
           FARM_VAULT_ABI,
@@ -404,6 +426,9 @@ export class EthereumService {
 
         return {
           id: address,
+          // typescript bug
+          network: ETH as typeof ETH,
+          underlying: vault.underlying?.address,
           name: contractToName(vault.contract),
           prettyName: contractToName(vault.contract),
           earnFarm: !vaultsWithoutReward.has(contractToName(vault.contract)),
@@ -414,6 +439,7 @@ export class EthereumService {
           unstakedBalance: prettyFarmBalance,
           address: { vault: address },
           underlyingBalance: prettyVaultBalance,
+          ...partialAssetData,
         }
       }
 
@@ -430,6 +456,8 @@ export class EthereumService {
 
       return {
         id: address,
+        // typescript bug
+        network: ETH as typeof ETH,
         name: `${vault.contract.name} (has not pool)`,
         prettyName: contractToName(vault.contract),
         earnFarm: !vaultsWithoutReward.has(vault.contract.address),
@@ -440,6 +468,7 @@ export class EthereumService {
         unstakedBalance: prettyVaultBalance,
         address: { vault: vault.contract.address },
         underlyingBalance: prettyVaultBalance,
+        ...partialAssetData,
       }
     })
   }
@@ -462,22 +491,36 @@ export class EthereumService {
         EthereumService.getPrice(farmAddress),
       ])
 
+      // Case 1, 2:
+      // Case 1: Vault has pool: 1.1 pool has Farm reward, 1.2 pool has iFarm reward
+      // Case 2: Vault has no pool.
       const assetsFromVaultsPromises = EthereumService.getAssetsFromVaults(
         vaults,
         pools,
         walletAddress,
         farmPrice,
       )
-
       const poolsWithoutVaults = pools.filter((pool) => {
         return !vaults.find(
           (vault) => vault.contract.address === pool.lpToken?.address,
         )
       })
-
+      // Case 3: Pool without Vault.
       const assetsFromPoolsWithoutVaultsPromises = poolsWithoutVaults.map(
-        (pool) =>
-          EthereumService.getAssetsFromPool(pool, walletAddress, farmPrice),
+        (pool) => {
+          const partialAssetData = {
+            underlyingAddress: BlockchainService.calcUnderlying(
+              undefined,
+              pool,
+            ),
+          }
+          return EthereumService.getAssetsFromPool(
+            pool,
+            walletAddress,
+            farmPrice,
+            partialAssetData,
+          )
+        },
       )
 
       const assetsDataResolved: IAssetsInfo[] = await Promise.all([
@@ -551,6 +594,7 @@ export class EthereumService {
     return [
       {
         id: address,
+        network: ETH,
         name: 'SNOW_DONNER_POOL',
         prettyName: 'SNOW_DONNER_POOL',
         earnFarm: false,
@@ -563,6 +607,7 @@ export class EthereumService {
           pool: SNOWSWAP.fSnowStakingPool.address,
         },
         underlyingBalance: stakingPoolBalance,
+        underlyingAddress: SNOWSWAP.fSnow.address,
       },
     ]
   }
