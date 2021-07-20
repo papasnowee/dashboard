@@ -27,7 +27,7 @@ import {
   IVault,
   ETH,
   IPartialAssetData,
-} from '@/types/entities'
+} from '@types/entities'
 import { BigNumber } from 'bignumber.js'
 import { API } from '@/api'
 import { BlockchainService } from '../BlockchainService.ts'
