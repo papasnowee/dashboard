@@ -3,7 +3,6 @@ import {
   farmDecimals,
   vaultsWithoutReward,
   bFarmAddress,
-  bscOutdatedVaults,
   LEGACY_BSC_FACTORY,
   CONTRACTS_FOR_PRICES,
   CONTRACTS_FOR_PRICES_KEYS,
@@ -12,7 +11,13 @@ import {
 } from '@/constants/constants'
 
 import { BSC_UNDERLYING_ABI, FTOKEN_ABI, REWARDS_ABI } from '@/lib/data/ABIs'
-import { IAssetsInfo, IPool, IVault } from '@/types/entities'
+import {
+  IAssetsInfo,
+  IPool,
+  IVault,
+  BSC,
+  IPartialAssetData,
+} from '@/types/entities'
 import { BigNumber } from 'bignumber.js'
 import { API } from '@/api'
 import { BlockchainService } from '../BlockchainService.ts'
@@ -22,6 +27,7 @@ export class BSCService {
     pool: IPool,
     walletAddress: string,
     bFarmPrice: BigNumber | null,
+    partialAssetData: IPartialAssetData,
     relatedVault?: IVault,
   ): Promise<IAssetsInfo> {
     const lpTokenContract = new BSCWeb3.eth.Contract(
@@ -119,15 +125,15 @@ export class BSCService {
     const lpTokenPrettyPricePerFullShare =
       lpTokenPricePerFullShare && lpTokenDecimals
         ? new BigNumber(lpTokenPricePerFullShare).dividedBy(
-            10 ** Number(lpTokenDecimals),
-          )
+          10 ** Number(lpTokenDecimals),
+        )
         : null
 
     const percentOfPool =
       poolTotalSupply && poolBalance
         ? new BigNumber(poolBalance)
-            .dividedBy(poolTotalSupply)
-            .multipliedBy(100)
+          .dividedBy(poolTotalSupply)
+          .multipliedBy(100)
         : null
 
     /** All account assets that contains in the pool are in USD */
@@ -138,9 +144,9 @@ export class BSCService {
         prettyPoolBalance &&
         lpTokenPrettyPricePerFullShare
         ? underlyingPrice
-            .multipliedBy(prettyPoolBalance)
-            .multipliedBy(lpTokenPrettyPricePerFullShare)
-            .plus(bFarmPrice.multipliedBy(prettyRewardTokenBalance))
+          .multipliedBy(prettyPoolBalance)
+          .multipliedBy(lpTokenPrettyPricePerFullShare)
+          .plus(bFarmPrice.multipliedBy(prettyRewardTokenBalance))
         : null
     }
     // fTokens balance in underlying Tokens;
@@ -149,18 +155,33 @@ export class BSCService {
         ? prettyPoolBalance.multipliedBy(lpTokenPrettyPricePerFullShare)
         : null
 
+    const address = relatedVault
+      ? relatedVault.contract.address
+      : pool.contract.address
+
+    // TODO: create pretty name list for BSC assets
+    const name = relatedVault
+      ? relatedVault.contract.name || 'no name'
+      : pool.contract.name || 'no name'
+
     return {
-      name: relatedVault ? relatedVault.contract.name : pool.contract.name,
+      id: address,
+      // typescript bug
+      network: BSC as typeof BSC,
+      prettyName: name,
+      name,
       earnFarm: true,
       farmToClaim: prettyRewardTokenBalance,
       stakedBalance: prettyPoolBalance,
       percentOfPool,
       value: calcValue(),
       unstakedBalance: prettyLpTokenBalance,
-      address: relatedVault
-        ? { vault: relatedVault.contract.address }
-        : { pool: pool.contract.address },
+      address: {
+        vault: relatedVault?.contract.address,
+        pool: pool.contract.address,
+      },
       underlyingBalance,
+      ...partialAssetData,
     }
   }
 
@@ -177,11 +198,20 @@ export class BSCService {
           pool.lpToken?.address.toLowerCase()
         )
       })
+
+      const partialAssetData = {
+        underlyingAddress: BlockchainService.calcUnderlying(
+          vault,
+          vaultRelatedPool,
+        ),
+      }
+
       if (vaultRelatedPool) {
         return BSCService.getAssetsFromPool(
           vaultRelatedPool,
           walletAddress,
           bFarmPrice,
+          partialAssetData,
           vault,
         )
       }
@@ -210,12 +240,20 @@ export class BSCService {
       const percentOfPool: BigNumber | null =
         totalSupply && vaultBalance && totalSupply.toString() !== '0'
           ? new BigNumber(vaultBalance)
-              .dividedToIntegerBy(totalSupply)
-              .multipliedBy(100)
+            .dividedToIntegerBy(totalSupply)
+            .multipliedBy(100)
           : null
 
+      const address = vault.contract.address
+
+      const name = vault.contract.name
+
       return {
-        name: vault.contract.name,
+        id: address,
+        // typescript bug
+        network: BSC as typeof BSC,
+        prettyName: name,
+        name,
         earnFarm: !vaultsWithoutReward.has(vault.contract.name),
         farmToClaim: null,
         stakedBalance: null,
@@ -224,6 +262,7 @@ export class BSCService {
         unstakedBalance: prettyVaultBalance,
         address: { vault: vault.contract.address },
         underlyingBalance: prettyVaultBalance,
+        ...partialAssetData,
       }
     })
   }
@@ -239,16 +278,8 @@ export class BSCService {
       BSCService.getBSCPrice(bFarmAddress, 'default'),
     ])
 
-    const actualVaults = vaults.filter((v) => {
-      return !bscOutdatedVaults.has(v.contract.address)
-    })
-
-    const assetsFromVaultsPromises: Promise<IAssetsInfo>[] = BSCService.getAssetsFromVaults(
-      actualVaults,
-      pools,
-      walletAddress,
-      bFarmPrice,
-    )
+    const assetsFromVaultsPromises: Promise<IAssetsInfo>[] =
+      BSCService.getAssetsFromVaults(vaults, pools, walletAddress, bFarmPrice)
 
     const poolsWithoutVaults = pools.filter((pool: IPool) => {
       return !vaults.find(
@@ -256,9 +287,18 @@ export class BSCService {
       )
     })
 
-    const assetsFromPoolsWithoutVaultsPromises: Promise<IAssetsInfo>[] = poolsWithoutVaults.map(
-      (pool) => BSCService.getAssetsFromPool(pool, walletAddress, bFarmPrice),
-    )
+    const assetsFromPoolsWithoutVaultsPromises: Promise<IAssetsInfo>[] =
+      poolsWithoutVaults.map((pool) => {
+        const partialAssetData = {
+          underlyingAddress: BlockchainService.calcUnderlying(undefined, pool),
+        }
+        return BSCService.getAssetsFromPool(
+          pool,
+          walletAddress,
+          bFarmPrice,
+          partialAssetData,
+        )
+      })
 
     const assetsDataResolved: IAssetsInfo[] = await Promise.all([
       ...assetsFromVaultsPromises,

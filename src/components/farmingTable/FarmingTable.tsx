@@ -1,8 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
-
 import { fonts } from '../../App/styles/appStyles'
-import { IAssetsInfo } from '../../types'
 import { prettyNumber, prettyCurrency } from '../../utils/utils'
 import {
   TableContainer,
@@ -12,14 +10,28 @@ import {
   PanelTabContainerLeft,
   PanelTab,
   Tabs,
+  VaultIconImg,
+  AccordionRow,
+  Flash,
+  AccordionToggle,
 } from './FarmingTableStyles'
-import FarmTableSkeleton from './FarmTableSkeleton'
+import { FarmTableSkeleton } from './FarmTableSkeleton'
+import { ToolTip } from '../Tooltip'
 import { observer } from 'mobx-react'
 import { useStores } from '@/stores/utils'
-
+import flashSvg from '@/assets/flash.svg'
+import { BSC, ETH, IAssetsInfo } from '@types/entities'
 interface IProps {
   display: boolean
   assets: IAssetsInfo[]
+}
+
+interface IVaultIconNames {
+  [key: string]: string
+}
+
+interface IVaultIconProps {
+  vaultName: string
 }
 
 const columns = [
@@ -27,35 +39,52 @@ const columns = [
     name: 'Rewards Pool',
   },
   {
-    name: 'Earn FARM',
-  },
-  {
     name: 'FARM to Claim',
-  },
-  {
-    name: 'Staked Asset',
   },
   {
     name: '% of Pool',
   },
   {
-    name: 'Underlying balance',
-  },
-  {
     name: 'Value',
   },
-  {
-    name: 'Unstaked',
-  },
 ]
+
+const rootUrl = {
+  [BSC]: 'https://bscscan.com/address/',
+  [ETH]: 'https://etherscan.io/address/',
+}
+
+const importAll = (requiredContext: __WebpackModuleApi.RequireContext) => {
+  const images: IVaultIconNames = {}
+  requiredContext.keys().forEach((item: string) => {
+    images[item.replace('./', '')] = requiredContext(item)
+  })
+  return images
+}
+const icons = importAll(
+  require.context(
+    '../../assets/harvest-icons/vaults/',
+    false,
+    /\.(png|jpe?g|svg)$/,
+  ),
+)
 
 export const FarmingTable: React.FC<IProps> = observer((props) => {
   const { display, assets } = props
   const { settingsStore, exchangeRatesStore } = useStores()
+  const [accordion, setAccordion] = useState<string[]>([])
 
-  const baseCurrency = settingsStore.settings.currency.value
-  // TODO fix
-  // const currentExchangeRate = exchangeRatesStore.value?.[baseCurrency]
+  const toggleAccordion = (id: string) => {
+    if (accordion.includes(id.toLowerCase())) {
+      setAccordion(accordion.filter((item) => item !== id.toLowerCase()))
+    } else {
+      setAccordion([...accordion, id.toLowerCase()])
+    }
+  }
+
+  const displayCurrency = settingsStore.settings.currency.value
+  const currentExchangeRate =
+    exchangeRatesStore.exchangeRates.values[displayCurrency]
 
   const assetRows = assets?.map((asset) => {
     const prettyFarmToClaim: string = asset.farmToClaim
@@ -71,9 +100,9 @@ export const FarmingTable: React.FC<IProps> = observer((props) => {
 
     const prettyValue: string = asset.value
       ? prettyCurrency(
-          // Number(asset.value.toNumber() * currentExchangeRate),
-          Number(asset.value.toNumber() * 1),
-          baseCurrency,
+          asset.value.toNumber(),
+          displayCurrency,
+          currentExchangeRate,
         )
       : '-'
 
@@ -85,29 +114,103 @@ export const FarmingTable: React.FC<IProps> = observer((props) => {
       ? `${asset.percentOfPool.toFixed(6)}%`
       : '-'
 
+    const isOpen = accordion.includes(asset.id.toLowerCase())
+
+    const poolURL = `${rootUrl[asset.network]}${asset.address.pool}`
+    const vaultURL = `${rootUrl[asset.network]}${asset.address.vault}`
+    const underlyingURL = `${rootUrl[asset.network]}${asset.underlyingAddress}`
+
     return (
-      <MainTableRow key={asset.address.pool || asset.address.vault}>
-        <div className="name">{asset.name}</div>
-        <div className="active">{asset.earnFarm.toString()}</div>
-        <div
-          className="earned-rewards"
-          // TODO: implements it
-          // onKeyUp={() => getThisReward(summary.earnedRewards)}
-          // onClick={() => getThisReward(summary.earnedRewards)}
-          role="button"
-          tabIndex={0}
-        >
-          {prettyFarmToClaim}
-        </div>
-        <div className="staked">{prettyStakedBalance}</div>
-        <div className="pool">{persentOfPool}</div>
-        <div className="underlying">{prettyUnderlyingBalance}</div>
-        <div className="value">{prettyValue}</div>
-        <div className="unstaked">{prettyUnstakedBalance}</div>
-      </MainTableRow>
+      <div key={asset.id}>
+        <MainTableRow open={isOpen} onClick={() => toggleAccordion(asset.id)}>
+          <ToolTip
+            activator={
+              <div title={asset.earnFarm ? 'Earn FARM: true' : undefined}>
+                <VaultIcon vaultName={asset.name} />
+                {asset.prettyName}{' '}
+                {asset.earnFarm && <Flash src={flashSvg} alt="" />}
+              </div>
+            }
+          >
+            {asset.address.pool && (
+              <p>
+                Pool address:
+                <a
+                  href={poolURL}
+                  target="_blank"
+                  style={{
+                    textDecoration: 'none',
+                    color: '#000',
+                    fontWeight: 700,
+                  }}
+                  rel="noreferrer"
+                >
+                  {` ${asset.address.pool.slice(
+                    0,
+                    5,
+                  )}...${asset.address.pool.slice(-4)}`}
+                </a>
+              </p>
+            )}
+            {asset.address.vault && (
+              <p>
+                Vault address:
+                <a
+                  href={vaultURL}
+                  target="_blank"
+                  style={{
+                    textDecoration: 'none',
+                    color: '#000',
+                    fontWeight: 700,
+                  }}
+                  rel="noreferrer"
+                >
+                  {` ${asset.address.vault.slice(
+                    0,
+                    5,
+                  )}...${asset.address.vault.slice(-4)}`}
+                </a>
+              </p>
+            )}
+            {asset.underlyingAddress && (
+              <p>
+                Underlying address:
+                <a
+                  href={underlyingURL}
+                  target="_blank"
+                  style={{
+                    textDecoration: 'none',
+                    color: '#000',
+                    fontWeight: 700,
+                  }}
+                  rel="noreferrer"
+                >
+                  {` ${asset.underlyingAddress.slice(
+                    0,
+                    5,
+                  )}...${asset.underlyingAddress.slice(-4)}`}
+                </a>
+              </p>
+            )}
+          </ToolTip>
+
+          {/* <div className="active">{asset.earnFarm.toString()}</div> */}
+          <div tabIndex={0}>{prettyFarmToClaim}</div>
+          <div>{persentOfPool}</div>
+          <div>{prettyValue}</div>
+          <AccordionToggle open={isOpen}>
+            {' '}
+            <i></i>
+          </AccordionToggle>
+        </MainTableRow>
+        <AccordionRow open={isOpen}>
+          <div>Staked Asset: {prettyStakedBalance}</div>
+          <div>Underlying balance: {prettyUnderlyingBalance}</div>
+          <div>Unstaked: {prettyUnstakedBalance}</div>
+        </AccordionRow>
+      </div>
     )
   })
-
   return (
     <>
       {display && (
@@ -160,6 +263,22 @@ export const FarmingTable: React.FC<IProps> = observer((props) => {
     </>
   )
 })
+
+const VaultIcon: React.FC<IVaultIconProps> = (props) => {
+  const { vaultName } = props
+  return (
+    <VaultIconImg
+      src={`${
+        icons[
+          vaultName
+            .replace(/^V_/, '')
+            .replace(/^P_[f]?/, '')
+            .replace(/_#V\d$/, '') + '.png'
+        ]
+      }`}
+    ></VaultIconImg>
+  )
+}
 
 const NoAssetTable = styled.div`
   display: flex;

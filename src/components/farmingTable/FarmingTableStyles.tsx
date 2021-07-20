@@ -42,15 +42,19 @@ export const MainTableInner = styled.div`
     background-color: ${(props) => props.theme.style.scrollBarColor};
   }
 `
+
 export const MainTableRow = styled.div`
   display: grid;
-  grid-template-columns: 0.75fr 0.3fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
+  cursor: pointer;
+  grid-template-columns: 0.75fr 0.3fr 0.5fr 0.5fr 0.2fr;
   font-size: 1.7rem;
   align-items: center;
   font-family: ${fonts.contentFont};
   padding: 1.5rem 1rem;
   width: 100%;
-  border-bottom: 1.2px solid rgba(53, 53, 53, 0.15);
+  border-bottom: ${(props) =>
+    props.open ? 'none' : '1.2px solid rgba(53, 53, 53, 0.15)'};
+
   @media (max-width: 1920px) {
     width: 100%;
   }
@@ -62,37 +66,8 @@ export const MainTableRow = styled.div`
     text-align: center;
     width: 100%;
   }
-  .name {
-  }
+
   .active {
-  }
-  .earned-rewards {
-    cursor: pointer;
-    transition: scale 200ms ease;
-    border-radius: 0.5rem;
-    margin-right: 2rem;
-    &:hover {
-      width: 35%;
-      margin: 0 auto;
-      transform: scale(1.1);
-    }
-  }
-  .staked {
-  }
-  .pool {
-  }
-  .unstaked {
-    @media (max-width: 1280px) {
-      margin-left: 1.5rem;
-    }
-  }
-  .value {
-    margin-left: 1rem;
-    @media (max-width: 1280px) {
-      margin-left: 1.5rem;
-    }
-  }
-  .underlying {
   }
   .stake-but {
     margin-right: 10px;
@@ -114,9 +89,31 @@ export const MainTableRow = styled.div`
     }
   }
 `
+
+export const AccordionRow = styled.div`
+  opacity: 0.8;
+  background-color: #ffcd8d;
+  height: ${(props) => (props.open ? '43px' : '0')};
+  overflow: hidden;
+  transition: height 0.333s;
+  border-bottom: ${(props) =>
+    props.open ? '1.2px solid rgba(53, 53, 53, 0.15)' : 'none'};
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  font-size: 1.4rem;
+  font-family: ${fonts.contentFont};
+
+  div {
+    justify-content: space-around;
+    text-align: center;
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+`
+
 export const MainTableHeader = styled.div`
   display: grid;
-  grid-template-columns: 0.75fr 0.3fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.5fr;
+  grid-template-columns: 0.75fr 0.3fr 0.5fr 0.5fr 0.2fr;
   //grid-gap: 20px;
   font-size: 1.7rem;
   font-family: ${fonts.headerFont};
@@ -220,5 +217,43 @@ export const PanelTab = styled.div`
   }
   @media (max-width: 333px) {
     margin-right: 0.3rem;
+  }
+`
+
+export const VaultIconImg = styled.img`
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+`
+
+export const Flash = styled.img`
+  width: 15px;
+  height: 15px;
+`
+
+export const AccordionToggle = styled.div`
+  text-decoration: underline;
+  cursor: pointer;
+  height: 100%;
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  i {
+    position: relative;
+    &:before {
+      content: '';
+      position: absolute;
+      top: ${(props) => (props.open ? '8px' : '3px')};
+      right: -15px;
+      width: 10px;
+      height: 10px;
+      border-left: 2px solid #000;
+      border-bottom: 2px solid #000;
+      transform: ${(props) =>
+        props.open ? 'rotate(135deg)' : 'rotate(-45deg)'};
+      transition: transform 0.333s;
+    }
   }
 `

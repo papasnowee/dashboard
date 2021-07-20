@@ -3,9 +3,17 @@ import Web3 from 'web3'
 import { Contract } from 'web3-eth-contract'
 
 import { BigNumberZero } from '@/constants'
+import { IVault, IPool } from '@/types'
 
 // common methods for working with blockchain
 export class BlockchainService {
+  static calcUnderlying(vault?: IVault, pool?: IPool): string | undefined {
+    if (vault) {
+      return vault.underlying?.address
+    }
+    return pool?.lpToken?.address
+  }
+
   static async calcUnderlyingPrice(
     poolBalance: string | null,
     priceAddress: string | undefined,

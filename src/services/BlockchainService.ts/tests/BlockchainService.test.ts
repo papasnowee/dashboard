@@ -1,15 +1,32 @@
 import { BigNumberZero, BSCWeb3, ethWeb3 } from '@/constants'
 import { REWARDS_ABI } from '@/lib/data/ABIs'
 import BigNumber from 'bignumber.js'
-import { BSCService } from '../BSCService'
-import { EthereumService } from '../EthereumService'
-import { BlockchainService } from './BlockchainService'
+import { BSCService } from '../../BSCService'
+import { EthereumService } from '../../EthereumService'
+import { BlockchainService } from '../BlockchainService'
+import { mockVault, mockPool } from './mockData'
 
 const path = require('path')
 
 require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') })
 
 describe('BlockchainService', () => {
+  describe('calcUnderlying', () => {
+    test('if there is a vault and no pool, then underlying === vault.underlying.address', () => {
+      const underlying = BlockchainService.calcUnderlying(mockVault)
+      expect(underlying).toBe(mockVault.underlying?.address)
+    })
+
+    test('if there is a vault and pool, then underlying === vault.underlying.address', () => {
+      const underlying = BlockchainService.calcUnderlying(mockVault, mockPool)
+      expect(underlying).toBe(mockVault.underlying?.address)
+    })
+
+    test('if there is a pool an no vault, then underlying === pool.lpToken.address', () => {
+      const underlying = BlockchainService.calcUnderlying(undefined, mockPool)
+      expect(underlying).toBe(mockPool.lpToken?.address)
+    })
+  })
   describe('calcUnderlyingPrice', () => {
     test('if poolBalance > 0 and priceAddress are valid, and getPrice-function for BSC-network, then price is BigNumber', () => {
       const BSCUnderlying = '0xf9045866e7b372def1eff3712ce55fac1a98daf0'

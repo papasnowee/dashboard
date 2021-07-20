@@ -2,7 +2,7 @@ import { ethWeb3, PSAddress } from '@/constants'
 import { EthereumService } from './EthereumService'
 import BigNumber from 'bignumber.js'
 import { REWARDS_ABI } from '@/lib/data/ABIs'
-import { testValues, testPoolWithVault, testRelatedVault } from './testData'
+import { testPoolWithVault, testRelatedVault } from './testData'
 
 describe('EthereumService', () => {
   describe('getPrice', () => {
@@ -62,10 +62,12 @@ describe('EthereumService', () => {
     test('positive scenario', () => {
       const testWallet = '0x814055779f8d2f591277b76c724b7adc74fb82d9'
       const farmPrice = new BigNumber(111)
+      const testPartialAssetData = { underlyingAddress: '0x34rerfsfdsffgdfg' }
       return EthereumService.getAssetsFromPool(
         testPoolWithVault,
         testWallet,
         farmPrice,
+        testPartialAssetData,
         testRelatedVault,
       )
         .then((assetsInfo) => {
@@ -76,9 +78,9 @@ describe('EthereumService', () => {
             assetsInfo.percentOfPool?.constructor.name === 'BigNumber' &&
             assetsInfo.value?.constructor.name === 'BigNumber' &&
             assetsInfo.address.vault?.toLocaleLowerCase() ===
-              '0x639d4f3f41daa5f4b94d63c2a5f3e18139ba9e54'.toLocaleLowerCase() &&
+            '0x639d4f3f41daa5f4b94d63c2a5f3e18139ba9e54'.toLocaleLowerCase() &&
             assetsInfo.underlyingBalance?.toString().substring(0, 6) ===
-              '1.1446' &&
+            '1.1446' &&
             assetsInfo.unstakedBalance?.toString() === '0' &&
             assetsInfo.farmToClaim?.constructor.name === 'BigNumber'
 
@@ -88,91 +90,5 @@ describe('EthereumService', () => {
           expect(true).toBe(false)
         })
     }, 10000)
-  })
-
-  describe('getAssets', () => {
-    test('obtained testWallet asset values are valid', () => {
-      const testWallet = '0x814055779f8d2f591277b76c724b7adc74fb82d9'
-      return EthereumService.getAssets(testWallet)
-        .then((assets) => {
-          let isUndefined = null
-          isUndefined = assets.find((element) => {
-            const address = element.address.pool ?? element.address.vault
-            const assetFromMock = testValues[address]
-            let isValid: boolean = false
-
-            if (!assetFromMock) {
-              // eslint-disable-next-line no-console
-              console.log(
-                `Test name: obtained testWallet asset values are valid. testValues object does not contain this address ${address}.`,
-              )
-              return
-            }
-
-            try {
-              const isPS = address?.toLowerCase() === PSAddress
-
-              isValid =
-                element.earnFarm === assetFromMock.earnFarm &&
-                Number(element.farmToClaim) >= assetFromMock.farmToClaim &&
-                element.name === assetFromMock.name &&
-                (isPS
-                  ? element.stakedBalance?.toNumber() >
-                    Number(assetFromMock.stakedBalance)
-                  : element.stakedBalance?.toString() ===
-                    assetFromMock.stakedBalance) &&
-                element.unstakedBalance?.toString() ===
-                  assetFromMock.unstakedBalance &&
-                element.percentOfPool?.constructor.name === 'BigNumber' &&
-                element.underlyingBalance?.constructor.name === 'BigNumber' &&
-                element.value?.constructor.name === 'BigNumber'
-            } catch (error) {
-              // eslint-disable-next-line no-console
-              console.log(
-                `Test name: obtained testWallet asset values are valid. Some error with ${address}. ${error}`,
-              )
-              return true
-            }
-            if (!isValid) {
-              // eslint-disable-next-line no-console
-              console.log(
-                'Test name: obtained testWallet asset values are valid. Some problem with:',
-                {
-                  element,
-                  assetFromMock,
-                },
-                {
-                  earnFarm: element.earnFarm === assetFromMock.earnFarm,
-                  farmToClaim:
-                    Number(element.farmToClaim) >= assetFromMock.farmToClaim,
-                  name: element.name === assetFromMock.name,
-                  stakedBalance:
-                    element.stakedBalance?.toString() ===
-                    assetFromMock.stakedBalance,
-                  unstakedBalance:
-                    element.unstakedBalance?.toString() ===
-                    assetFromMock.unstakedBalance,
-                  percentOfPool:
-                    element.percentOfPool?.constructor.name === 'BigNumber',
-                  underlyingBalance:
-                    element.underlyingBalance?.constructor.name === 'BigNumber',
-                  value: element.value?.constructor.name === 'BigNumber',
-                },
-                {
-                  ElementStakedBalanceToString: element.stakedBalance?.toString(),
-                },
-              )
-              return true
-            }
-            return false
-          })
-          expect(isUndefined).toBe(undefined)
-        })
-        .catch((error) => {
-          // eslint-disable-next-line no-console
-          console.log(error)
-          expect(true).toBe(false)
-        })
-    }, 30000)
   })
 })

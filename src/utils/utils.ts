@@ -1,4 +1,5 @@
 import { ethers } from 'ethers'
+import { IContract } from '../types'
 import vaultNames from '../static/vaultNames.json'
 
 const currencyFormatter = (currency: string) =>
@@ -14,8 +15,12 @@ export const prettyNumber = (number: number) => {
   return numberFormatter().format(number)
 }
 
-export const prettyCurrency = (balance: number, currency: string) => {
-  return currencyFormatter(currency).format(balance)
+export const prettyCurrency = (
+  balance: number,
+  currency: string,
+  exchangeRate: number,
+) => {
+  return currencyFormatter(currency).format(balance * exchangeRate)
 }
 
 export const convertStandardNumber = (num: number, currency: string) => {
@@ -43,7 +48,7 @@ export const validateAddress = (address: string) => {
   return true
 }
 
-export const contractToName = (contract: object | null) => {
+export const contractToName = (contract?: IContract): string => {
   if (!contract) return 'no name'
   return vaultNames[contract.address] || contract.name || 'no name'
 }
