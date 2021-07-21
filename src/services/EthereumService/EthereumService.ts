@@ -159,8 +159,8 @@ export class EthereumService {
     const prettyPricePerFullShareLpToken =
       pricePerFullShareLpToken && lpTokenDecimals
         ? new BigNumber(pricePerFullShareLpToken).dividedBy(
-          10 ** Number(lpTokenDecimals),
-        )
+            10 ** Number(lpTokenDecimals),
+          )
         : 1
 
     const prettyRewardPricePerFullShare = iFarmPricePerFullShare
@@ -176,8 +176,8 @@ export class EthereumService {
     const percentOfPool =
       poolBalance && poolTotalSupply
         ? new BigNumber(poolBalance)
-          .dividedBy(new BigNumber(poolTotalSupply))
-          .multipliedBy(100)
+            .dividedBy(new BigNumber(poolTotalSupply))
+            .multipliedBy(100)
         : null
 
     /** All account assets that contains in the pool are in USD */
@@ -188,9 +188,9 @@ export class EthereumService {
         farmPrice !== null &&
         prettyPoolBalance
         ? underlyingPrice
-          .multipliedBy(prettyPoolBalance)
-          .multipliedBy(prettyPricePerFullShareLpToken)
-          .plus(farmPrice.multipliedBy(rewardTokenAreInFARM))
+            .multipliedBy(prettyPoolBalance)
+            .multipliedBy(prettyPricePerFullShareLpToken)
+            .plus(farmPrice.multipliedBy(rewardTokenAreInFARM))
         : null
     }
 
@@ -333,15 +333,15 @@ export class EthereumService {
         const value: BigNumber | null =
           farmPrice !== null && prettyUnderlyingBalanceWithInvestmentForHolder
             ? prettyUnderlyingBalanceWithInvestmentForHolder
-              .multipliedBy(farmPrice)
-              .dividedBy(10 ** vault.decimals!)
+                .multipliedBy(farmPrice)
+                .dividedBy(10 ** vault.decimals!)
             : null
 
         const percentOfPool: BigNumber | null =
           vaultBalance && totalSupply
             ? new BigNumber(vaultBalance)
-              .dividedBy(new BigNumber(totalSupply))
-              .multipliedBy(new BigNumber(100))
+                .dividedBy(new BigNumber(totalSupply))
+                .multipliedBy(new BigNumber(100))
             : null
 
         const underlyingBalance: BigNumber | null =
@@ -405,8 +405,8 @@ export class EthereumService {
         const percentOfPool =
           totalValue && vaultBalance
             ? new BigNumber(vaultBalance)
-              .dividedBy(new BigNumber(totalValue))
-              .multipliedBy(100)
+                .dividedBy(new BigNumber(totalValue))
+                .multipliedBy(100)
             : BigNumberZero
 
         const prettyVaultBalance = vaultBalance
@@ -584,9 +584,9 @@ export class EthereumService {
     const snowValue =
       stakingPoolBalance && snowEarnedBalance && snowPrice
         ? BigNumber.sum(
-          stakingPoolBalance,
-          snowEarnedBalance.multipliedBy(snowPrice),
-        )
+            stakingPoolBalance,
+            snowEarnedBalance.multipliedBy(snowPrice),
+          )
         : null
 
     const address = SNOWSWAP.fSnowStakingPool.address

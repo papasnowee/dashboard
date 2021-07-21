@@ -125,15 +125,15 @@ export class BSCService {
     const lpTokenPrettyPricePerFullShare =
       lpTokenPricePerFullShare && lpTokenDecimals
         ? new BigNumber(lpTokenPricePerFullShare).dividedBy(
-          10 ** Number(lpTokenDecimals),
-        )
+            10 ** Number(lpTokenDecimals),
+          )
         : null
 
     const percentOfPool =
       poolTotalSupply && poolBalance
         ? new BigNumber(poolBalance)
-          .dividedBy(poolTotalSupply)
-          .multipliedBy(100)
+            .dividedBy(poolTotalSupply)
+            .multipliedBy(100)
         : null
 
     /** All account assets that contains in the pool are in USD */
@@ -144,9 +144,9 @@ export class BSCService {
         prettyPoolBalance &&
         lpTokenPrettyPricePerFullShare
         ? underlyingPrice
-          .multipliedBy(prettyPoolBalance)
-          .multipliedBy(lpTokenPrettyPricePerFullShare)
-          .plus(bFarmPrice.multipliedBy(prettyRewardTokenBalance))
+            .multipliedBy(prettyPoolBalance)
+            .multipliedBy(lpTokenPrettyPricePerFullShare)
+            .plus(bFarmPrice.multipliedBy(prettyRewardTokenBalance))
         : null
     }
     // fTokens balance in underlying Tokens;
@@ -240,8 +240,8 @@ export class BSCService {
       const percentOfPool: BigNumber | null =
         totalSupply && vaultBalance && totalSupply.toString() !== '0'
           ? new BigNumber(vaultBalance)
-            .dividedToIntegerBy(totalSupply)
-            .multipliedBy(100)
+              .dividedToIntegerBy(totalSupply)
+              .multipliedBy(100)
           : null
 
       const address = vault.contract.address
