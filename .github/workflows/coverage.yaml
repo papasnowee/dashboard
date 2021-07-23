@@ -3,7 +3,7 @@ on: push
 jobs:
   coverage:
     env:
-      REACT_APP_ETH_URL: ${{ secrets. REACT_APP_ETH_URL}}
+      REACT_APP_ETH_URL: ${{ secrets.REACT_APP_ETH_URL}}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
