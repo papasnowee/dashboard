@@ -103,8 +103,10 @@ export const LEGACY_BSC_FACTORY = '0xbcfccbde45ce874adcb698cc183debcf17952812'
 const BSC_URL = 'https://bsc-dataseed.binance.org/'
 
 export const BSCWeb3 = new Web3(BSC_URL)
-export const ethWeb3 = new Web3(process.env.REACT_APP_ETH_URL!)
-
+// export const ethWeb3 = new Web3(process.env.REACT_APP_ETH_URL!)
+export const ethWeb3 = new Web3(
+  'https://mainnet.infura.io/v3/def4583b927349979add3404a4d8e9e7',
+)
 const legacyContractForPrices = new BSCWeb3.eth.Contract(
   BSC_ORACLE_ABI_FOR_GETTING_PRICES,
   LEGACY_BSC_ORACLE_CONTRACT_FOR_GETTING_PRICES,
