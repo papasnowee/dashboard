@@ -1,6 +1,6 @@
-import React from "react";
-import styled, { css, ThemeProvider } from "styled-components";
-import { darkTheme, lightTheme, fonts } from "../../styles/appStyles";
+import React from 'react'
+import styled, { css } from 'styled-components'
+import { fonts } from '../../App/styles/appStyles'
 
 const Container = styled.div`
   ${({ isOpen }) => {
@@ -24,14 +24,14 @@ const Container = styled.div`
         @media (max-width: 600px) {
           transform: translateX(-12%);
         }
-      `;
+      `
     } else {
       return css`
         display: none;
-      `;
+      `
     }
   }}
-`;
+`
 
 const Inner = styled.div`
   background-color: ${(props) => props.theme.style.wikiTabBackground};
@@ -79,7 +79,7 @@ const Inner = styled.div`
     width: 80%;
     margin: 0 auto;
   }
-`;
+`
 
 const CloseIcon = styled.span`
   position: absolute;
@@ -96,34 +96,32 @@ const CloseIcon = styled.span`
       top: 1.5px;
     }
   }
-`;
+`
 
-const NoFarmModal = ({ state, modal, onClose, message }) => (
-  <ThemeProvider theme={state.theme === "dark" ? darkTheme : lightTheme}>
-    <Container isOpen={modal.open}>
-      <Inner>
-        <h4 className="error-title">Hold up, partner!</h4>
-        <p>{modal.message}</p>
-        {modal.noFarm ? (
-          <button className="button">
-            <a
-              target="_blank"
-              rel="noopener noreferrer"
-              href="https://app.uniswap.org/#/swap?inputCurrency=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&outputCurrency=0xa0246c9032bC3A600820415aE600c6388619A14D"
-            >
-              Buy Farm!
-            </a>
-          </button>
-        ) : (
-          ""
-        )}
+const NoFarmModal = ({ modal, onClose }) => (
+  <Container isOpen={modal.open}>
+    <Inner>
+      <h4 className="error-title">Hold up, partner!</h4>
+      <p>{modal.message}</p>
+      {modal.noFarm ? (
+        <button className="button">
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://app.uniswap.org/#/swap?inputCurrency=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&outputCurrency=0xa0246c9032bC3A600820415aE600c6388619A14D"
+          >
+            Buy Farm!
+          </a>
+        </button>
+      ) : (
+        ''
+      )}
 
-        <CloseIcon onClick={onClose}>
-          <i className="fas fa-times-circle fa-2x"></i>
-        </CloseIcon>
-      </Inner>
-    </Container>
-  </ThemeProvider>
-);
+      <CloseIcon onClick={onClose}>
+        <i className="fas fa-times-circle fa-2x"></i>
+      </CloseIcon>
+    </Inner>
+  </Container>
+)
 
-export default NoFarmModal;
+export default NoFarmModal

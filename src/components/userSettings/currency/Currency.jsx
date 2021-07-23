@@ -1,40 +1,32 @@
-import React,{useContext} from 'react';
-import HarvestContext from '../../../Context/HarvestContext';
-import {CurrencyContainer} from './CurrencyStyles';
+import React from 'react'
+import { CurrencyContainer } from './CurrencyStyles'
+import { observer } from 'mobx-react'
+import { useStores } from '@/stores/utils'
 
+export const Currency = observer(() => {
+  const { settingsStore, exchangeRatesStore } = useStores()
 
-const Currency = () => {
-    const {
-        exchangeRates,
-        baseCurrency,
-        setBaseCurrency,
-        setCurrentExchangeRate,
-      } = useContext(HarvestContext);
+  const handleChange = (event) => {
+    settingsStore.updateCurrency(event.target.value)
+  }
 
-    const changeHandler = (e) => {
-        setBaseCurrency(e.target.value);
-        setCurrentExchangeRate(exchangeRates[e.target.value]);
-        window.localStorage.setItem("HarvestFinance:currency", e.target.value)
-      };
-    return (
-        <CurrencyContainer>
-        <h3>Display currency in:</h3>
-        <select
-          onChange={changeHandler}
-          value={baseCurrency}
-          name="currency"
-          id="currencies"
-        >
-          <option value="1">{baseCurrency}</option>
-
-          {exchangeRates
-            ? Object.entries(exchangeRates).map(([key, value]) => {
-                return <option key={key} value={key}>{key}</option>;
-              })
-            : ""}
-        </select>
-      </CurrencyContainer>
-    );
-}
-
-export default Currency;
+  return (
+    <CurrencyContainer>
+      <h3>Display currency in:</h3>
+      <select
+        onChange={handleChange}
+        value={settingsStore.settings.currency.value}
+        name="currency"
+        id="currencies"
+      >
+        {exchangeRatesStore.supportedCurrencies.map((option) => {
+          return (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          )
+        })}
+      </select>
+    </CurrencyContainer>
+  )
+})

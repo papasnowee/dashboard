@@ -5,3 +5,7 @@ src/assets/*
 src/styles/*
 src/serviceWorker.js
 src/setupTests.js
+.history
+
+src/**/__generated__/*
+src/types/globalTypes

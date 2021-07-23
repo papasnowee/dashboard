@@ -1,0 +1,26 @@
+name: 'coverage'
+on: push
+jobs:
+  coverage:
+    env:
+      REACT_APP_ETH_URL: ${{ secrets.REACT_APP_ETH_URL }}
+      REACT_APP_HARVEST_KEY: ${{ secrets.REACT_APP_HARVEST_KEY }}
+      REACT_APP_INFURA_KEY: ${{ secrets.REACT_APP_INFURA_KEY }}
+      REACT_APP_ETH_PARSER_URL: ${{ secrets.REACT_APP_ETH_PARSER_URL }}
+      ZAPPER_API_KEY: ${{ secrets.ZAPPER_API_KEY }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm -s run test:coverage
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          name: codecov-dashboard
+          verbose: true

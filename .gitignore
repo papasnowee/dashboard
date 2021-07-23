@@ -26,4 +26,11 @@ scripts/*.json
 *.csv
 node_modules
 dist
+build
+.history
+storybook-static
+workingFiles
+.idea
 .env
+.node-version
+*.iml

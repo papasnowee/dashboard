@@ -1,5 +1,5 @@
-import styled from "styled-components";
-import { fonts } from "../../styles/appStyles";
+import styled from 'styled-components'
+import { fonts } from '../../App/styles/appStyles'
 
 export const PanelTab = styled.div`
   margin-right: 0.75rem;
@@ -7,7 +7,7 @@ export const PanelTab = styled.div`
   border-top: ${(props) => props.theme.style.mainBorder};
   border-left: ${(props) => props.theme.style.mainBorder};
   border-right: ${(props) => props.theme.style.mainBorder};
-  padding: 0.75rem 2rem 2.25rem 2rem;
+  padding: 0.75rem 2rem 1rem 2rem;
   background-color: ${(props) => props.theme.style.highlight};
   box-shadow: ${(props) => props.theme.style.panelTabBoxShadow};
 
@@ -48,8 +48,6 @@ export const PanelTab = styled.div`
     }
   }
 
-  
-
   &.radio-tab {
     position: relative;
     font-size: 1.9rem;
@@ -87,19 +85,19 @@ export const PanelTab = styled.div`
       display: none;
     }
   }
-`;
+`
 
 export const PanelTabContainer = styled.div`
   display: flex;
   justify-content: space-between;
-`;
+`
 
 export const PanelTabContainerLeft = styled.div`
   display: flex;
   justify-content: flex-start;
-`;
+`
 
 export const PanelTabContainerRight = styled.div`
   display: flex;
   justify-content: flex-end;
-`;
+`
