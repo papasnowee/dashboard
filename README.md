@@ -4,6 +4,8 @@
 
 ## Setup
 
+Use NodeJS 12.x
+
 ```sh
 $ npm install
 $ cp .env.example .env # and populate with your variables

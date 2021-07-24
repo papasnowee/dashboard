@@ -27,7 +27,7 @@ import {
   IVault,
   ETH,
   IPartialAssetData,
-} from '@/types/entities'
+} from '@types/entities'
 import { BigNumber } from 'bignumber.js'
 import { API } from '@/api'
 import { BlockchainService } from '../BlockchainService.ts'
@@ -612,7 +612,7 @@ export class EthereumService {
     ]
   }
 
-  static async getPrice(tokenAddress?: string): Promise<BigNumber | null> {
+  static async getPrice(tokenAddress: string): Promise<BigNumber | null> {
     const gettingPricesContract = new ethWeb3.eth.Contract(
       ETH_ORACLE_ABI_FOR_GETTING_PRICES,
       ETHEREUM_CONTRACT_FOR_GETTING_PRICES,

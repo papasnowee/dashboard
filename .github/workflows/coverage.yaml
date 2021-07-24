@@ -1,17 +1,38 @@
-name: 'coverage'
-on:
-  pull_request:
-    branches:
-      - main
-      - dev
+name: Running Code Coverage
+
+on: [push]
+
 jobs:
-  coverage:
-    runs-on: ubuntu-latest
+  build:
     env:
-      CI_JOB_NUMBER: 1
+      REACT_APP_ETH_URL: ${{ secrets.REACT_APP_ETH_URL }}
+      REACT_APP_HARVEST_KEY: ${{ secrets.REACT_APP_HARVEST_KEY }}
+      REACT_APP_INFURA_KEY: ${{ secrets.REACT_APP_INFURA_KEY }}
+      REACT_APP_ETH_PARSER_URL: ${{ secrets.REACT_APP_ETH_PARSER_URL }}
+      ZAPPER_API_KEY: ${{ secrets.ZAPPER_API_KEY }}
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
     steps:
-      - uses: actions/checkout@v1
-      - uses: artiomtr/jest-coverage-report-action@v1.3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_script: npm run test:coverage
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2 
+
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run the tests
+      run: npm test -- --coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1

@@ -1,9 +1,4 @@
-export type {
-  IPool,
-  IVault,
-  IAssetsInfo,
-  IAssetsInfoBigNumber,
-} from './Entities'
+export type { IPool, IVault, IAssetsInfo } from './entities'
 
 declare module '*.gql' {
   import { DocumentNode } from 'graphql'

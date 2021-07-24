@@ -1,4 +1,4 @@
-import { IVault, IPool } from '@types/Entities'
+import { IVault, IPool } from '@types/entities'
 
 export const mockPool: IPool = {
   id: 95,
