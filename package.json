@@ -17,8 +17,7 @@
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "download-schema": "apollo service:download --endpoint=https://api.thegraph.com/subgraphs/name/harvestfi/harvest-finance graphql-schema.json",
-    "codegen": "npm run download-schema && apollo codegen:generate  --globalTypesFile=./src/types/globalTypes.d.ts --localSchemaFile=./graphql-schema.json --target=typescript --tagName=gql",
-    "prepare": "husky install"
+    "codegen": "npm run download-schema && apollo codegen:generate  --globalTypesFile=./src/types/globalTypes.d.ts --localSchemaFile=./graphql-schema.json --target=typescript --tagName=gql"
   },
   "husky": {
     "hooks": {
@@ -167,8 +166,6 @@
       "^config$": "<rootDir>/configs/app-config.js"
     },
     "verbose": true,
-    "testEnvironment": "node",
-    "coverageDirectory": "./coverage/",
-    "collectCoverage": true
+    "testEnvironment": "node"
   }
 }
