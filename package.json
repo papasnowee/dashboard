@@ -167,8 +167,6 @@
       "^config$": "<rootDir>/configs/app-config.js"
     },
     "verbose": true,
-    "testEnvironment": "node",
-    "coverageDirectory": "./coverage/",
-    "collectCoverage": true
+    "testEnvironment": "node"
   }
 }
